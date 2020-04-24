@@ -4,10 +4,8 @@ const testFilePath = '/a.txt'
 
 describe('Compare', () => {
   test('detects a file was added', () => {
-    const { fs: source } = createFs()
+    const { fs: source } = createFs({ [testFilePath]: 'hello' })
     const { fs: target } = createFs()
-
-    source.writeFileSync(testFilePath, 'hello')
 
     const compareResult = compareFile(source, target, testFilePath)
 
@@ -16,9 +14,7 @@ describe('Compare', () => {
 
   test('detects a file was removed', () => {
     const { fs: source } = createFs()
-    const { fs: target } = createFs()
-
-    target.writeFileSync(testFilePath, 'hello')
+    const { fs: target } = createFs({ [testFilePath]: 'hello' })
 
     const compareResult = compareFile(source, target, testFilePath)
 
@@ -26,11 +22,8 @@ describe('Compare', () => {
   })
 
   test('detects a file was modified', () => {
-    const { fs: source } = createFs()
-    const { fs: target } = createFs()
-
-    source.writeFileSync(testFilePath, 'hello1')
-    target.writeFileSync(testFilePath, 'hello2')
+    const { fs: source } = createFs({ [testFilePath]: 'hello1' })
+    const { fs: target } = createFs({ [testFilePath]: 'hello2' })
 
     const compareResult = compareFile(source, target, testFilePath)
 
@@ -38,11 +31,8 @@ describe('Compare', () => {
   })
 
   test('detects a file was not changed', () => {
-    const { fs: source } = createFs()
-    const { fs: target } = createFs()
-
-    source.writeFileSync(testFilePath, 'hello')
-    target.writeFileSync(testFilePath, 'hello')
+    const { fs: source } = createFs({ [testFilePath]: 'hello' })
+    const { fs: target } = createFs({ [testFilePath]: 'hello' })
 
     const compareResult = compareFile(source, target, testFilePath)
 

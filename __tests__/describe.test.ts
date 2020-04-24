@@ -17,13 +17,9 @@ describe('Describe', () => {
   })
 
   describe('describeComparison', () => {
-    const { volume, fs: target } = createFs()
-
-    volume.mkdirpSync(path.join(mocksPath, 'describe', 'b'))
-    target.writeFileSync(
-      path.join(mocksPath, 'describe', 'b', 'b.txt'),
-      'something'
-    )
+    const { volume, fs: target } = createFs({
+      [path.join(mocksPath, 'describe', 'b', 'b.txt')]: 'something',
+    })
 
     test('describes an uncolored fs comparison', () => {
       const description = describeComparison(
