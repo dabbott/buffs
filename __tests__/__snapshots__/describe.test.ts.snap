@@ -1,5 +1,29 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Describe describeComparison describes a colorized fs comparison 1`] = `
+"[90mdescribe[39m
+├── [32ma / a.txt[39m
+└── [90mb[39m
+    ├── [33mb.txt[39m
+    ├── [32mc[39m
+    │   ├── [32mc.txt[39m
+    │   ├── [32md / d.txt[39m
+    │   └── [32me.txt[39m
+    └── [32mf.txt[39m"
+`;
+
+exports[`Describe describeComparison describes an uncolored fs comparison 1`] = `
+"describe[N]
+├── a / a.txt[A]
+└── b[N]
+    ├── b.txt[M]
+    ├── c[A]
+    │   ├── c.txt[A]
+    │   ├── d / d.txt[A]
+    │   └── e.txt[A]
+    └── f.txt[A]"
+`;
+
 exports[`Describe describes a fs 1`] = `
 "describe
 ├── a / a.txt
