@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Describe describes a fs 1`] = `
+"describe
+├── a / a.txt
+└── b
+    ├── b.txt
+    ├── c
+    │   ├── c.txt
+    │   ├── d / d.txt
+    │   └── e.txt
+    └── f.txt"
+`;
