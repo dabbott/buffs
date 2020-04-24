@@ -33,7 +33,17 @@ describe('Describe', () => {
         { colorize: true }
       )
 
-      expect(description).toMatchSnapshot()
+      expect(description).toMatchInlineSnapshot(`
+        "[90mdescribe[39m
+        ├── [32ma / a.txt[39m
+        └── [90mb[39m
+            ├── [33mb.txt[39m
+            ├── [32mc[39m
+            │   ├── [32mc.txt[39m
+            │   ├── [32md / d.txt[39m
+            │   └── [32me.txt[39m
+            └── [32mf.txt[39m"
+      `)
     })
 
     test('describes an uncolored fs comparison', () => {
