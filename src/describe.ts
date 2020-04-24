@@ -18,12 +18,7 @@ type Line = {
   prefix: string
 }
 
-function describeFile(
-  source: IFS,
-  filePath: string,
-  depth: number,
-  isLast: boolean
-): Line[] {
+function describeFile(source: IFS, filePath: string, depth: number): Line[] {
   let rootLine = {
     path: filePath,
     label: path.basename(filePath),
@@ -36,7 +31,7 @@ function describeFile(
 
     if (files.length === 1) {
       const childPath = path.join(filePath, files[0])
-      const lines = describeFile(source, childPath, depth, isLast)
+      const lines = describeFile(source, childPath, depth)
       lines[0].label = `${rootLine.label} / ${lines[0].label}`
       return lines
     }
@@ -44,14 +39,14 @@ function describeFile(
     const nestedLines: Line[] = files.flatMap((file, index, array) => {
       const childIsLast = index === array.length - 1
       const childPath = path.join(filePath, file)
-      const childLines = describeFile(source, childPath, depth + 1, isLast)
+      const childLines = describeFile(source, childPath, depth + 1)
 
       const childPrefix = childIsLast ? LinePrefix.LastChild : LinePrefix.Child
 
       childLines.forEach((line) => {
         if (line.depth === depth + 1) {
           line.prefix = childPrefix + line.prefix
-        } else if (isLast && childIsLast) {
+        } else if (childIsLast) {
           line.prefix = LinePrefix.LastNestedChild + line.prefix
         } else {
           line.prefix = LinePrefix.NestedChild + line.prefix
@@ -71,7 +66,7 @@ function describeFile(
  * Create a description of all files in the source filesystem
  */
 export function describe(source: IFS, filePath: string): string {
-  const lines = describeFile(source, filePath, 0, true)
+  const lines = describeFile(source, filePath, 0)
   const strings = lines.map((line) => line.prefix + line.label)
   return strings.join('\n')
 }
@@ -101,7 +96,7 @@ export function describeComparison(
   filePath: string,
   options: { colorize?: boolean } = {}
 ): string {
-  const lines = describeFile(source, filePath, 0, true)
+  const lines = describeFile(source, filePath, 0)
 
   if (options.colorize) {
     return lines
