@@ -1,6 +1,6 @@
 {
   "name": "buffs",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A filesystem utility, supporting batch & in-memory operations.",
   "main": "lib/index.js",
   "files": [
@@ -11,7 +11,8 @@
     "build": "rm -rf ./lib && tsc --declaration",
     "build:watch": "rm -rf ./lib && tsc --declaration --watch",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "prepublishOnly": "npm run build"
   },
   "repository": "https://github.com/dabbott/devfs",
   "license": "MIT",
