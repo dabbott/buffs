@@ -1,11 +1,7 @@
-# devfs
+# buffs
 
-A filesystem for developer tools.
+A filesystem utility, supporting batch & in-memory operations.
 
 ```bash
-npm install --save devfs
+npm install --save buffs
 ```
-
-## Overview
-
-This library improves the developer experience of CLI tools that interact with the operating system.

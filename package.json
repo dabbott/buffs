@@ -1,7 +1,7 @@
 {
-  "name": "devfs",
+  "name": "buffs",
   "version": "0.0.1",
-  "description": "A filesystem for developer tools",
+  "description": "A filesystem utility, supporting batch & in-memory operations.",
   "main": "lib/index.js",
   "files": [
     "lib"
