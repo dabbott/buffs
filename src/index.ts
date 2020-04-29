@@ -1,4 +1,6 @@
-export { createFs } from './utils'
+export { IFS } from 'unionfs/lib/fs'
+
+export { createFs, VolumeType, DirectoryJSON } from './utils'
 
 export { copy } from './copy'
 

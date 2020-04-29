@@ -12,7 +12,7 @@ const simpleMockTestFileData = fs.readFileSync(simpleMockTestFilePath, 'utf8')
 const nestedMockPath = path.join(mocksPath, 'nested')
 
 describe('Copy', () => {
-  test('copies a file from the OS fs to a memory fs', () => {
+  test('copies a file from the source (OS) to the target (memory)', () => {
     const { volume, fs: target } = createFs()
 
     copy(fs, target, simpleMockPath)
@@ -24,7 +24,7 @@ describe('Copy', () => {
     })
   })
 
-  test('copies a file tree from the OS fs to a memory fs', () => {
+  test('copies a directory from the source (OS) to the target (memory)', () => {
     const { volume, fs: target } = createFs()
 
     copy(fs, target, nestedMockPath)
@@ -34,6 +34,19 @@ describe('Copy', () => {
     expect(json).toEqual({
       [path.join(nestedMockPath, 'a.txt')]: 'a',
       [path.join(nestedMockPath, 'b', 'b.txt')]: 'b',
+    })
+  })
+
+  test('copies a directory to the target at a specified path', () => {
+    const { volume, fs: target } = createFs()
+
+    copy(fs, target, nestedMockPath, '/test')
+
+    const json = volume.toJSON()
+
+    expect(json).toEqual({
+      '/test/a.txt': 'a',
+      '/test/b/b.txt': 'b',
     })
   })
 })

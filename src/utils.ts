@@ -17,3 +17,5 @@ export function createFs(
   const memfs = createFsFromVolume(volume)
   return { volume, fs: memfs as any }
 }
+
+export { VolumeType, DirectoryJSON }
