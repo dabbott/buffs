@@ -2,7 +2,7 @@ export { IFS } from 'unionfs/lib/fs'
 
 export { createFs, VolumeType, DirectoryJSON } from './utils'
 
-export { copy } from './copy'
+export { copy, CopyOptions } from './copy'
 
 export { describe, describeComparison } from './describe'
 
