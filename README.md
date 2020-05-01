@@ -17,9 +17,9 @@ Every API works both on the real filesystem and in-memory filesystems created by
 
 ### **copy**
 
-`(source: IFS, target: IFS, sourcePath: string, targetPath?: string, options?: CopyOptions) => void`
-
 Copy a file from the source to the target filesystem recursively.
+
+**Type**: `(source: IFS, target: IFS, sourcePath: string, targetPath?: string, options?: CopyOptions) => void`
 
 #### Example
 
@@ -43,6 +43,8 @@ copy(source, fs, '/', process.cwd())
 Create an in-memory filesystem.
 
 This is a wrapper around [`memfs`](https://github.com/streamich/memfs).
+
+**Type**: `(json: DirectoryJSON = {}, cwd?: string) => { volume: VolumeType; fs: IFS }`
 
 ```js
 import fs from 'fs'
