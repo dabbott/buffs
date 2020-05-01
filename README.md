@@ -15,6 +15,8 @@ Every API works both on the real filesystem and in-memory filesystems created by
 - [describe](#describe)
 - [describeComparison](#describeComparison)
 
+---
+
 ### `copy`
 
 Copy a file from the source to the target filesystem recursively.
@@ -38,6 +40,8 @@ const { fs: source } = createFs({
 copy(source, fs, '/', process.cwd())
 ```
 
+---
+
 ### `createFs`
 
 Create an in-memory filesystem.
@@ -56,6 +60,8 @@ const { volume, fs } = createFs({
   '/b/b.txt': 'b',
 })
 ```
+
+---
 
 ### `describe`
 
@@ -80,6 +86,8 @@ console.log(description)
 // ├── a.txt
 // └── b / b.txt
 ```
+
+---
 
 ### `describeComparison`
 
