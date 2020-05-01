@@ -19,7 +19,7 @@ Every API works both on the real filesystem and in-memory filesystems created by
 
 ### `copy`
 
-Copy a file from the source to the target filesystem recursively.
+Copy a file or directory from the source to the target filesystem recursively.
 
 **Type**: `(source: IFS, target: IFS, sourcePath: string, targetPath?: string, options?: CopyOptions) => void`
 

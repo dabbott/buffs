@@ -21,7 +21,7 @@ export type CopyOptions = {
 }
 
 /**
- * Copy a file (recursively) from the source to the target filesystem
+ * Copy a file or directory from the source to the target filesystem recursively.
  */
 export function copy(
   source: IFS,
