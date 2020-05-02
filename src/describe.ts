@@ -94,7 +94,7 @@ export function describeComparison(
   source: IFS,
   target: IFS,
   filePath: string,
-  options: { colorize?: boolean } = {}
+  options: { colorize?: boolean } = { colorize: true }
 ): string {
   const lines = describeFile(source, filePath, 0)
 
