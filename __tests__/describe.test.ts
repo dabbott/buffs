@@ -20,7 +20,7 @@ describe('Describe', () => {
   })
 
   describe('describeComparison', () => {
-    const { volume, fs: target } = createFs({
+    const { fs: target } = createFs({
       [path.join(mocksPath, 'describe', 'b', 'b.txt')]: 'something',
     })
 
