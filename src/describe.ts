@@ -19,9 +19,11 @@ type Line = {
 }
 
 function describeFile(source: IFS, filePath: string, depth: number): Line[] {
+  const isRootPath = filePath === '/'
+
   let rootLine = {
     path: filePath,
-    label: path.basename(filePath),
+    label: isRootPath ? '/' : path.basename(filePath),
     depth: depth,
     prefix: '',
   }
@@ -32,7 +34,9 @@ function describeFile(source: IFS, filePath: string, depth: number): Line[] {
     if (files.length === 1) {
       const childPath = path.join(filePath, files[0])
       const lines = describeFile(source, childPath, depth)
-      lines[0].label = `${rootLine.label} / ${lines[0].label}`
+      lines[0].label = isRootPath
+        ? `/ ${lines[0].label}`
+        : `${rootLine.label} / ${lines[0].label}`
       return lines
     }
 

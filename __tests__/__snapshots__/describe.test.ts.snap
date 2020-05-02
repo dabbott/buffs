@@ -24,7 +24,21 @@ exports[`Describe describeComparison describes an uncolored fs comparison 1`] = 
     └── f.txt[A]"
 `;
 
-exports[`Describe describes a fs 1`] = `
+exports[`Describe describes a deeply nested fs 1`] = `
+"/ a / b / c / d / e / f
+├── g.txt
+└── h.txt"
+`;
+
+exports[`Describe describes an in-memory fs 1`] = `
+"/
+├── a.txt
+└── b.txt"
+`;
+
+exports[`Describe describes an in-memory fs with a single file 1`] = `"/ a.txt"`;
+
+exports[`Describe describes the OS fs 1`] = `
 "describe
 ├── a / a.txt
 └── b
