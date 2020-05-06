@@ -1,6 +1,5 @@
 import path from 'path'
 import { IFS } from 'unionfs/lib/fs'
-import { isDirectory } from './utils'
 
 export type CopyOptions = {
   /**
@@ -44,11 +43,14 @@ export function copy(
     return
   }
 
-  if (isDirectory(source, sourcePath)) {
+  const stat = source.lstatSync(sourcePath)
+
+  if (stat.isDirectory()) {
     const files = source.readdirSync(sourcePath)
 
     try {
       target.mkdirSync(formattedTargetPath, { recursive: true })
+      target.chmodSync(formattedTargetPath, stat.mode)
     } catch (error) {
       // Assume the directory already exists.
       // This will fail later if the directory doesn't exist.
@@ -61,6 +63,8 @@ export function copy(
     })
   } else {
     const data = source.readFileSync(sourcePath)
+
     target.writeFileSync(formattedTargetPath, data)
+    target.chmodSync(formattedTargetPath, stat.mode)
   }
 }
