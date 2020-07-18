@@ -1,21 +1,21 @@
-import { createFs } from '../src/index'
+import { createFs, toJSON } from '../src/index'
 
 describe('Create', () => {
   test('creates an in-memory filesystem', () => {
-    const { volume } = createFs({ 'a.txt': 'hello' })
+    const { fs } = createFs({ 'a.txt': 'hello' })
 
-    expect(volume.toJSON()).toEqual({ '/a.txt': 'hello' })
+    expect(toJSON(fs)).toEqual({ '/a.txt': 'hello' })
   })
 
   test('creates an in-memory filesystem at the specified cwd', () => {
-    const { volume } = createFs({ 'a.txt': 'hello' }, '/tmp/example')
+    const { fs } = createFs({ 'a.txt': 'hello' }, '/tmp/example')
 
-    expect(volume.toJSON()).toEqual({ '/tmp/example/a.txt': 'hello' })
+    expect(toJSON(fs)).toEqual({ '/tmp/example/a.txt': 'hello' })
   })
 
   test('creates a nested file', () => {
-    const { volume } = createFs({ 'a/a.txt': 'hello' })
+    const { fs } = createFs({ 'a/a.txt': 'hello' })
 
-    expect(volume.readdirSync('/a')).toEqual(['a.txt'])
+    expect(fs.readdirSync('/a')).toEqual(['a.txt'])
   })
 })

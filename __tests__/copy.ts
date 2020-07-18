@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
-import { copy, createFs } from '../src/index'
+import { copy, createFs, toJSON } from '../src/index'
 
 const mocksPath = path.join(__dirname, 'mocks')
 
@@ -15,11 +15,11 @@ const executablePath = path.join(mocksPath, 'executable')
 
 describe('Copy', () => {
   test('copies a file from the source (OS) to the target (memory)', () => {
-    const { volume, fs: target } = createFs()
+    const { fs: target } = createFs()
 
     copy(fs, target, simpleMockPath)
 
-    const json = volume.toJSON()
+    const json = toJSON(target, '/')
 
     expect(json).toEqual({
       [simpleMockTestFilePath]: simpleMockTestFileData,
@@ -27,11 +27,11 @@ describe('Copy', () => {
   })
 
   test('copies a directory from the source (OS) to the target (memory)', () => {
-    const { volume, fs: target } = createFs()
+    const { fs: target } = createFs()
 
     copy(fs, target, nestedMockPath)
 
-    const json = volume.toJSON()
+    const json = toJSON(target, '/')
 
     expect(json).toEqual({
       [path.join(nestedMockPath, 'a.txt')]: 'a',
@@ -45,11 +45,11 @@ describe('Copy', () => {
       '/source/b/b.txt': 'b',
     })
 
-    const { volume, fs: target } = createFs()
+    const { fs: target } = createFs()
 
     copy(source, target, '/source', '/target')
 
-    const json = volume.toJSON()
+    const json = toJSON(target, '/')
 
     expect(json).toEqual({
       '/target/a.txt': 'a',
@@ -84,7 +84,7 @@ describe('Copy', () => {
       '/source/b/b.txt': 'b',
     })
 
-    const { volume, fs: target } = createFs()
+    const { fs: target } = createFs()
 
     const allArguments: { sourcePath: string; targetPath: string }[] = []
 
@@ -99,7 +99,7 @@ describe('Copy', () => {
       },
     })
 
-    const json = volume.toJSON()
+    const json = toJSON(target)
 
     expect(json).toEqual({
       '/target1/a1.txt': 'a',
@@ -121,7 +121,7 @@ describe('Copy', () => {
       '/source/c/b.txt': 'c/b',
     })
 
-    const { volume, fs: target } = createFs()
+    const { fs: target } = createFs()
 
     const allArguments: { sourcePath: string; targetPath: string }[] = []
 
@@ -135,7 +135,7 @@ describe('Copy', () => {
       },
     })
 
-    const json = volume.toJSON()
+    const json = toJSON(target)
 
     expect(json).toEqual({
       '/target/b/b.txt': 'b',
