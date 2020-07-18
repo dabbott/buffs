@@ -15,7 +15,7 @@ const executablePath = path.join(mocksPath, 'executable')
 
 describe('Copy', () => {
   test('copies a file from the source (OS) to the target (memory)', () => {
-    const { fs: target } = createFs()
+    const target = createFs()
 
     copy(fs, target, simpleMockPath)
 
@@ -27,7 +27,7 @@ describe('Copy', () => {
   })
 
   test('copies a directory from the source (OS) to the target (memory)', () => {
-    const { fs: target } = createFs()
+    const target = createFs()
 
     copy(fs, target, nestedMockPath)
 
@@ -40,12 +40,12 @@ describe('Copy', () => {
   })
 
   test('copies a directory to the target at a specified path', () => {
-    const { fs: source } = createFs({
+    const source = createFs({
       '/source/a.txt': 'a',
       '/source/b/b.txt': 'b',
     })
 
-    const { fs: target } = createFs()
+    const target = createFs()
 
     copy(source, target, '/source', '/target')
 
@@ -60,12 +60,12 @@ describe('Copy', () => {
   test('preserves file permissions', () => {
     const targetPath = '/executable'
 
-    const { fs: target } = createFs()
+    const target = createFs()
 
     // Copy from OS to memfs
     copy(fs, target, executablePath, targetPath)
 
-    const { fs: target2 } = createFs()
+    const target2 = createFs()
 
     // Copy from memfs to other memfs
     copy(target, target2, targetPath, targetPath)
@@ -79,12 +79,12 @@ describe('Copy', () => {
   })
 
   test('renames files when copying', () => {
-    const { fs: source } = createFs({
+    const source = createFs({
       '/source/a.txt': 'a',
       '/source/b/b.txt': 'b',
     })
 
-    const { fs: target } = createFs()
+    const target = createFs()
 
     const allArguments: { sourcePath: string; targetPath: string }[] = []
 
@@ -115,13 +115,13 @@ describe('Copy', () => {
   })
 
   test('filters files when copying', () => {
-    const { fs: source } = createFs({
+    const source = createFs({
       '/source/a.txt': 'a',
       '/source/b/b.txt': 'b',
       '/source/c/b.txt': 'c/b',
     })
 
-    const { fs: target } = createFs()
+    const target = createFs()
 
     const allArguments: { sourcePath: string; targetPath: string }[] = []
 

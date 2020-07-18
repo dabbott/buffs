@@ -20,7 +20,7 @@ describe('Describe', () => {
   })
 
   test('describes an in-memory fs', () => {
-    const { fs: source } = createFs({
+    const source = createFs({
       'a.txt': 'a',
       'b.txt': 'b',
     })
@@ -31,7 +31,7 @@ describe('Describe', () => {
   })
 
   test('describes an in-memory fs with a single file', () => {
-    const { fs: source } = createFs({
+    const source = createFs({
       'a.txt': 'a',
     })
 
@@ -41,7 +41,7 @@ describe('Describe', () => {
   })
 
   test('describes a deeply nested fs', () => {
-    const { fs: source } = createFs({
+    const source = createFs({
       '/a/b/c/d/e/f/g.txt': 'g',
       '/a/b/c/d/e/f/h.txt': 'h',
     })
@@ -52,7 +52,7 @@ describe('Describe', () => {
   })
 
   describe('describeComparison', () => {
-    const { fs: target } = createFs({
+    const target = createFs({
       [path.join(mocksPath, 'describe', 'b', 'b.txt')]: 'something',
     })
 

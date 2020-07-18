@@ -30,7 +30,7 @@ it('finds non-excluded paths', () => {
 })
 
 test('finds in-memory paths', () => {
-  const { fs: source } = createFs({ 'a/a.txt': '', 'b.txt': '' })
+  const source = createFs({ 'a/a.txt': '', 'b.txt': '' })
 
   const matches = find(source, '/', {
     include: (currentPath) => currentPath.endsWith('.txt'),
@@ -40,7 +40,7 @@ test('finds in-memory paths', () => {
 })
 
 test('finds nested in-memory paths', () => {
-  const { fs: source } = createFs({ 'a/a.txt': '', 'b.txt': '' })
+  const source = createFs({ 'a/a.txt': '', 'b.txt': '' })
 
   const matches = find(source, '/a', {
     include: (currentPath) => currentPath.endsWith('.txt'),
