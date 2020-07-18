@@ -12,4 +12,10 @@ describe('Create', () => {
 
     expect(volume.toJSON()).toEqual({ '/tmp/example/a.txt': 'hello' })
   })
+
+  test('creates a nested file', () => {
+    const { volume } = createFs({ 'a/a.txt': 'hello' })
+
+    expect(volume.readdirSync('/a')).toEqual(['a.txt'])
+  })
 })

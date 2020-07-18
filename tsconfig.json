@@ -10,5 +10,5 @@
     "typeRoots": ["node_modules/@types", "src/types"],
     "lib": ["ESNext"]
   },
-  "exclude": ["node_modules", "**/*.test.ts", "lib"]
+  "exclude": ["node_modules", "__tests__/**/*.ts", "lib"]
 }
