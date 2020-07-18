@@ -18,4 +18,12 @@ describe('Create', () => {
 
     expect(fs.readdirSync('/a')).toEqual(['a.txt'])
   })
+
+  test('creates an empty directory', () => {
+    const fs = createFs({ '/a': null })
+
+    expect(fs.statSync('/a').isDirectory()).toEqual(true)
+
+    expect(toJSON(fs)).toEqual({ '/a': null })
+  })
 })

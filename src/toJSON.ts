@@ -11,9 +11,14 @@ export function toJSON(source: IFS, rootPath: string = '/'): DirectoryJSON {
     onEnter: (currentPath) => {
       const fullPath = path.join(rootPath, currentPath)
 
-      if (isDirectory(source, fullPath)) return
-
-      result[fullPath] = source.readFileSync(fullPath, 'utf8')
+      if (isDirectory(source, fullPath)) {
+        // Represent empty directories as null
+        if (source.readdirSync(fullPath).length === 0) {
+          result[fullPath] = null
+        }
+      } else {
+        result[fullPath] = source.readFileSync(fullPath, 'utf8')
+      }
     },
   })
 
