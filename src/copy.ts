@@ -17,6 +17,22 @@ export type CopyOptions = {
     sourcePath: string
     targetPath: string
   }) => string
+
+  /**
+   * Copy file and directory permissions? Defaults to `true`.
+   */
+  copyPermissions?: boolean
+
+  /**
+   * Copy root directory permissions? Defaults to `false`.
+   *
+   * This overrides the `copyPermissions` setting just for the directory '/',
+   * which is the root of all file systems created by memfs. It's convenient
+   * to put files directly under '/' when using in-memory file systems, but
+   * it's unlikely that we want to copy the restrictive default permissions of
+   * the '/' directory.
+   */
+  copyRootDirectoryPermissions?: boolean
 }
 
 /**
@@ -50,10 +66,24 @@ export function copy(
 
     try {
       target.mkdirSync(formattedTargetPath, { recursive: true })
-      target.chmodSync(formattedTargetPath, stat.mode)
     } catch (error) {
       // Assume the directory already exists.
       // This will fail later if the directory doesn't exist.
+    }
+
+    if (
+      sourcePath === '/'
+        ? options.copyRootDirectoryPermissions === true
+        : options.copyPermissions !== false
+    ) {
+      // We use fchmod instead of chmod to work around an issue with memfs
+      // where directory permissions can't be set with chmod.
+      try {
+        let fd = target.openSync(formattedTargetPath, 'r')
+        target.fchmodSync(fd, stat.mode)
+      } catch {
+        // Consider permissions non-essential and continue
+      }
     }
 
     files.forEach((file) => {
@@ -65,6 +95,9 @@ export function copy(
     const data = source.readFileSync(sourcePath)
 
     target.writeFileSync(formattedTargetPath, data)
-    target.chmodSync(formattedTargetPath, stat.mode)
+
+    if (options.copyPermissions !== false) {
+      target.chmodSync(formattedTargetPath, stat.mode)
+    }
   }
 }

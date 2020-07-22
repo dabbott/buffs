@@ -1,5 +1,8 @@
 import fs from 'fs'
 import path from 'path'
+import os from 'os'
+
+const { S_IFREG, S_IFDIR } = fs.constants
 
 import { copy, createFs, toJSON } from '../src/index'
 
@@ -71,11 +74,24 @@ describe('Copy', () => {
     copy(target, target2, targetPath, targetPath)
 
     // Sanity check
-    expect(fs.statSync(executablePath).mode).toEqual(0o100755)
+    expect(fs.statSync(executablePath).mode - S_IFREG).toEqual(0o755)
 
-    expect(target.statSync(targetPath).mode).toEqual(0o100755)
+    expect(target.statSync(targetPath).mode - S_IFREG).toEqual(0o755)
 
-    expect(target2.statSync(targetPath).mode).toEqual(0o100755)
+    expect(target2.statSync(targetPath).mode - S_IFREG).toEqual(0o755)
+  })
+
+  test('respects the copyPermissions option', () => {
+    const targetPath = '/executable'
+
+    const target = createFs()
+
+    // Copy from OS to memfs
+    copy(fs, target, executablePath, targetPath, { copyPermissions: false })
+
+    expect(fs.statSync(executablePath).mode - S_IFREG).toEqual(0o755)
+
+    expect(target.statSync(targetPath).mode - S_IFREG).toEqual(0o666)
   })
 
   test('renames files when copying', () => {
@@ -148,5 +164,60 @@ describe('Copy', () => {
       { sourcePath: '/source/b/b.txt', targetPath: '/target/b/b.txt' },
       { sourcePath: '/source/c', targetPath: '/target/c' },
     ])
+  })
+
+  // Test on both OS and memory fs, since behavior can be different
+  describe('Root permissions', () => {
+    let tmp = ''
+
+    beforeEach(() => {
+      tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'buffs-'))
+    })
+
+    afterEach(() => {
+      fs.rmdirSync(tmp, { recursive: true })
+    })
+
+    test('copies an empty fs from source (memory) to target (OS)', () => {
+      const source = createFs({ foo: '123' })
+
+      expect(source.statSync('/').mode - S_IFDIR).toEqual(0o666)
+
+      const nestedPath = path.join(tmp, 'nested')
+
+      // OS
+      copy(source, fs, '/', nestedPath)
+
+      expect(fs.statSync(nestedPath).mode - S_IFDIR).toEqual(0o755)
+
+      // Memory
+      const target = createFs({}, tmp)
+
+      copy(source, target, '/', nestedPath)
+
+      expect(target.statSync(nestedPath).mode - S_IFDIR).toEqual(0o777)
+    })
+
+    test('respects copyRootPermissions (OS)', () => {
+      const source = createFs()
+
+      expect(source.statSync('/').mode - S_IFDIR).toEqual(0o666)
+
+      const nestedPath = path.join(tmp, 'nested')
+
+      // OS
+      copy(source, fs, '/', nestedPath, { copyRootDirectoryPermissions: true })
+
+      expect(fs.statSync(nestedPath).mode - S_IFDIR).toEqual(0o666)
+
+      // Memory
+      const target = createFs({}, tmp)
+
+      copy(source, target, '/', nestedPath, {
+        copyRootDirectoryPermissions: true,
+      })
+
+      expect(target.statSync(nestedPath).mode - S_IFDIR).toEqual(0o666)
+    })
   })
 })
