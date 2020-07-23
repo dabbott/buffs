@@ -14,6 +14,10 @@ Every API works both on the real filesystem and in-memory filesystems created by
 - [createFs](#createFs)
 - [describe](#describe)
 - [describeComparison](#describeComparison)
+- [find](#find)
+- [match](#match)
+- [toJSON](#toJSON)
+- [visit](#visit)
 
 ---
 
@@ -51,13 +55,13 @@ This is a wrapper around [`memfs`](https://github.com/streamich/memfs).
 **Type**: `(json: DirectoryJSON = {}, cwd?: string) => { volume: VolumeType; fs: IFS }`
 
 ```js
-import fs from 'fs'
 import { createFs } from 'buffs'
 
 // Create files using in-memory filesystem
-const { volume, fs } = createFs({
+const fs = createFs({
   '/a.txt': 'a',
   '/b/b.txt': 'b',
+  '/c': null, // Empty directory
 })
 ```
 
@@ -75,12 +79,12 @@ Create a description of all files in the source filesystem.
 import { describe, createFs } from 'buffs'
 
 // Create files using in-memory filesystem
-const { fs: source } = createFs({
+const fs = createFs({
   '/a.txt': 'a',
   '/b/b.txt': 'b',
 })
 
-const description = describe(source, '/')
+const description = describe(fs, '/')
 
 console.log(description)
 // ├── a.txt
@@ -100,12 +104,12 @@ Create a description of all files in the "updated" source filesystem, relative t
 ```js
 import { describeComparison, createFs } from 'buffs'
 
-const { fs: source } = createFs({
+const source = createFs({
   '/a.txt': 'a',
   '/b/b.txt': 'b',
 })
 
-const { fs: target } = createFs({
+const target = createFs({
   '/b/b.txt': 'b',
 })
 
@@ -114,4 +118,128 @@ const description = describeComparison(source, target, '/', { colorize: true })
 console.log(description)
 // ├── a.txt (printed in green, since it was "added")
 // └── b / b.txt
+```
+
+---
+
+### `find`
+
+Find files and directories using an `include` predicate function.
+
+If an `exclude` function option is passed, returning `true` will skip any file and its children, regardless of what `include` returned.
+
+**Type**: `(source: IFS, searchPath: string, options: FindOptions) => string[]`
+
+#### Example
+
+```js
+import { createFs, find } from 'buffs'
+
+// Create files using in-memory filesystem
+const fs = createFs({
+  '/a.txt': 'a',
+  '/b/b.txt': 'b',
+})
+
+const files = find(fs, '/', {
+  include: (file) => file.endsWith('.txt'),
+})
+
+console.log(files)
+// ['a.txt', 'b/b.txt']
+```
+
+---
+
+### `match`
+
+Find files and directories using glob ([https://github.com/micromatch/micromatch](micromatch)) patterns.
+
+If an `excludePatterns` function option is passed, returning `true` will skip any file and its children, regardless of what `include` returned.
+
+**Type**: `(source: IFS, searchPath: string, options: MatchOptions) => string[]`
+
+#### Example
+
+```js
+import { createFs, match } from 'buffs'
+
+// Create files using in-memory filesystem
+const fs = createFs({
+  '/a.txt': 'a',
+  '/b/b.txt': 'b',
+})
+
+const files = match(fs, '/', { includePatterns: ['**/*.txt'] })
+
+console.log(files)
+// ['a.txt', 'b/b.txt']
+```
+
+---
+
+### `toJSON`
+
+Convert a directory and all its files, recursively, to a JSON dictionary.
+
+**Type**: `(source: IFS, rootPath: string) => DirectoryJSON`
+
+#### Example
+
+```js
+import { createFs, match } from 'buffs'
+
+// Create files using in-memory filesystem
+const fs = createFs({
+  '/a.txt': 'a',
+  '/b/b.txt': 'b',
+})
+
+const json = toJSON(fs)
+
+console.log(json)
+// { '/a.txt': 'a', '/b/b.txt': 'b' }
+```
+
+---
+
+### `visit`
+
+Traverse a directory recursively, calling an optional `onEnter` and `onLeave` function for each file and directory.
+
+From `onEnter`:
+
+- return nothing or `undefined` to continue
+- return `"skip"` to skip any children of that directory and the subsequent `onLeave`
+- return `"stop"` to end traversal
+
+From `onLeave`:
+
+- return nothing or `undefined` to continue
+- return `"stop"` to end traversal
+
+**Type**: `(source: IFS, rootPath: string, options: VisitOptions) => void`
+
+#### Example
+
+```js
+import path from 'path'
+import { createFs, visit } from 'buffs'
+
+// Create files using in-memory filesystem
+const fs = createFs({
+  '/a.txt': 'a',
+  '/b/b.txt': 'b',
+})
+
+const allFiles = []
+
+const files = visit(fs, '/', {
+  onEnter: (file) => {
+    allFiles.push(path.join('/', file))
+  },
+})
+
+console.log(allFiles)
+// ['/', '/a.txt', '/b', '/b/b.txt']
 ```
