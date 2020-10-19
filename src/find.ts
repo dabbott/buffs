@@ -15,14 +15,12 @@ export function find(
 
   const files: string[] = []
 
-  visit(source, searchPath, {
-    onEnter: (currentPath) => {
-      if (exclude(currentPath)) return SKIP
+  visit(source, searchPath, (currentPath) => {
+    if (exclude(currentPath)) return SKIP
 
-      if (include(currentPath)) {
-        files.push(currentPath)
-      }
-    },
+    if (include(currentPath)) {
+      files.push(currentPath)
+    }
   })
 
   return files

@@ -17,17 +17,20 @@ export type VisitOptions = {
 export function visit(
   source: IFS,
   rootPath: string,
-  options: VisitOptions
+  options: ((currentPath: string) => EnterReturnValue) | VisitOptions
 ): void {
+  const normalizedOptions: VisitOptions =
+    typeof options === 'function' ? { onEnter: options } : options
+
   visitTree('', {
     onEnter: (currentPath) => {
-      if (options.onEnter) {
-        return options.onEnter(currentPath)
+      if (normalizedOptions.onEnter) {
+        return normalizedOptions.onEnter(currentPath)
       }
     },
     onLeave: (currentPath) => {
-      if (options.onLeave) {
-        return options.onLeave(currentPath)
+      if (normalizedOptions.onLeave) {
+        return normalizedOptions.onLeave(currentPath)
       }
     },
     getChildren: (currentPath) => {
