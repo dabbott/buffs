@@ -1,6 +1,10 @@
+import path from 'path'
 import { createFs, toBSON, fromBSON, toJSON } from '../src'
 import { encodeDocument, decodeDocument } from '../src/bson'
 import { isDirectory } from '../src/utils'
+
+const mocksPath = path.join(__dirname, 'mocks')
+const nestedMockPath = path.join(mocksPath, 'nested')
 
 describe('BSON', () => {
   test('serializes bson', () => {
@@ -12,7 +16,16 @@ describe('BSON', () => {
   })
 
   test('serializes fs to bson', () => {
-    const fs = createFs({ hello: 'world', '/dir': null })
+    const fs = require('fs')
+
+    const encoded = toBSON(fs, nestedMockPath)
+    const decoded = fromBSON(encoded)
+
+    expect(toJSON(decoded)).toEqual(toJSON(fs, nestedMockPath))
+  })
+
+  test('serializes memory fs to bson', () => {
+    const fs = createFs({ hello: 'world', dir: null })
     fs.writeFileSync('/foo', Buffer.from('bar'))
 
     const encoded = toBSON(fs)
