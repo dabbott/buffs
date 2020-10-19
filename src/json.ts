@@ -1,4 +1,4 @@
-import { DirectoryJSON } from 'memfs'
+import { createFsFromVolume, DirectoryJSON, Volume } from 'memfs'
 import path from 'path'
 import { IFS } from 'unionfs/lib/fs'
 import { isDirectory } from './utils'
@@ -21,4 +21,27 @@ export function toJSON(source: IFS, rootPath: string = '/'): DirectoryJSON {
   })
 
   return result
+}
+
+export type DirectoryBufferJSON = Record<string, string | Buffer | null>
+
+export function fromJSON(
+  json: DirectoryBufferJSON,
+  rootPath: string = '/'
+): IFS {
+  const volume = new Volume()
+  const fs = createFsFromVolume(volume)
+
+  Object.entries(json).forEach(([key, value]) => {
+    const fullPath = path.join(rootPath, key)
+
+    if (value !== null) {
+      fs.mkdirpSync(path.dirname(fullPath))
+      fs.writeFileSync(fullPath, value)
+    } else {
+      fs.mkdirpSync(fullPath)
+    }
+  })
+
+  return fs as any
 }
