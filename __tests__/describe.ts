@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import chalk from 'chalk'
+import colors from '../src/colors'
 
 import {
   describe as describeFS,
@@ -10,7 +10,7 @@ import {
 
 const mocksPath = path.join(__dirname, 'mocks')
 
-chalk.level = 2
+colors.level = 2
 
 describe('Describe', () => {
   test('describes the OS fs', () => {

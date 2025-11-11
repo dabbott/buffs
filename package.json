@@ -17,7 +17,6 @@
   "repository": "https://github.com/dabbott/devfs",
   "license": "MIT",
   "dependencies": {
-    "chalk": "^4.0.0",
     "memfs": "^3.1.2",
     "micromatch": "^4.0.2",
     "tree-visit": "^0.0.2",

@@ -2,7 +2,7 @@ import path from 'path'
 import { IFS } from 'unionfs/lib/fs'
 import { isDirectory } from './utils'
 import { compareFile, CompareResult } from './compare'
-import chalk from 'chalk'
+import colors from './colors'
 
 enum LinePrefix {
   Child = `├── `,
@@ -77,16 +77,16 @@ export function describe(source: IFS, filePath: string): string {
 
 export function createColorizer(
   compareResult: CompareResult
-): (string: string) => void {
+): (string: string) => string {
   switch (compareResult) {
     case CompareResult.Added:
-      return chalk.green
+      return colors.green
     case CompareResult.Modified:
-      return chalk.yellow
+      return colors.yellow
     case CompareResult.Removed:
-      return chalk.red
+      return colors.red
     case CompareResult.NoChange:
-      return chalk.gray
+      return colors.gray
   }
 }
 
