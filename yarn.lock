@@ -3307,10 +3307,10 @@ tr46@^1.0.1:
   dependencies:
     punycode "^2.1.0"
 
-tree-visit@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/tree-visit/-/tree-visit-0.0.2.tgz#fc4296034462da2821c8b9ac934122452db0da5e"
-  integrity sha512-H1AJMtmxeFtOUOFAzKPlx33hrAYJJNvTOTfK3XlC2oQDtDu1ArrExvRq7OUwURLYMf3E4vnz8fDPcME/MAuO3A==
+tree-visit@0.5.1:
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/tree-visit/-/tree-visit-0.5.1.tgz#0a6ae9a9fe209e38ba42459419999290d894b514"
+  integrity sha512-Inp/DTkzUQorIWIEyy/6TipYXDdJD00eBDEshbmmcb5eLs7u2vZlNz4a4gBpLJcE8gKylYDhaweRDQ8BOoH+Dw==
 
 ts-jest@^25.2.1:
   version "25.4.0"

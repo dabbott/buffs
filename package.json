@@ -19,7 +19,7 @@
   "dependencies": {
     "memfs": "^3.1.2",
     "micromatch": "^4.0.2",
-    "tree-visit": "^0.0.2",
+    "tree-visit": "0.5.1",
     "unionfs": "^4.4.0"
   },
   "devDependencies": {
