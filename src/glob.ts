@@ -71,8 +71,13 @@ function parseSegment(seg: string, i: number): [string, number] {
       // end of a subpattern, return to caller
       break
     } else if (ch === '\\') {
-      out += '\\\\'
-      i++
+      if (i + 1 < L) {
+        out += escapeRegex(seg[i + 1])
+        i += 2
+      } else {
+        out += '\\'
+        i++
+      }
     } else {
       out += escapeRegex(ch)
       i++
@@ -148,7 +153,9 @@ function parseCharClass(seg: string, i: number): [string, number] {
     'ascii': '\\x00-\\x7F',
     'cntrl': '\\x00-\\x1F\\x7F',
   }
-  content = content.replace(/\[:([a-z]+):\]/g, (_m, name) => posixMap[name] || _m)
+  content = content
+    .replace(/\[:\^([a-z]+):\]/g, (_m, name) => '^' + (posixMap[name] || _m))
+    .replace(/\[:([a-z]+):\]/g, (_m, name) => posixMap[name] || _m)
   const cls = '[' + (negate ? '^' : '') + content + ']'
   return [cls, j + 1]
 }
