@@ -1,6 +1,6 @@
-import { IFS } from 'unionfs/lib/fs'
-import { isMatch } from 'micromatch'
+import type { IFS } from './ifs'
 import { find } from './find'
+import { isMatch } from './glob'
 
 export type MatchOptions = {
   includePatterns: string[]

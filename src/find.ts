@@ -1,4 +1,4 @@
-import { IFS } from 'unionfs/lib/fs'
+import type { IFS } from './ifs'
 import { SKIP, visit } from './visit'
 
 export type FindOptions = {

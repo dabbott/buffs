@@ -153,9 +153,22 @@ console.log(files)
 
 ### `match`
 
-Find files and directories using glob ([https://github.com/micromatch/micromatch](micromatch)) patterns.
+Find files and directories using glob patterns.
 
-If an `excludePatterns` function option is passed, returning `true` will skip any file and its children, regardless of what `include` returned.
+If an `excludePatterns` option is passed, matching paths are removed regardless of `includePatterns`.
+
+Supported glob features (brief):
+
+- Wildcards: `*` (within a segment), `?` (single char within a segment)
+- Globstar: `**` (across segments). By default, dot-prefixed segments are not matched/traversed by `**`
+- Character classes: `[...]`, ranges (e.g. `[0-9]`), negation `[!x]`, and POSIX classes
+  - POSIX classes: `[:alnum:]`, `[:alpha:]`, `[:digit:]`, `[:xdigit:]`, `[:lower:]`, `[:upper:]`, `[:blank:]`, `[:space:]`, `[:word:]`, `[:punct:]`, `[:graph:]`, `[:print:]`, `[:ascii:]`, `[:cntrl:]`
+  - Negated POSIX classes: `[:^class:]` inside `[]`
+- Extglobs (segment-scoped): `@(a|b)`, `?(pat)`, `*(pat)`, `+(pat)`, `!(pat)`
+- Braces: comma lists `{a,b}`, nested lists, numeric ranges `{1..3}` (with optional step), and alpha ranges `{a..c}`
+  - Note: zero-padded numeric ranges like `{01..10}` are treated literally (not expanded)
+- Escapes: `\` escapes the next character to match it literally (e.g. `\*`, `\?`, `\(`)
+- Dotfiles: segments beginning with `.` only match when the corresponding pattern segment begins with `.` or explicitly targets them (e.g. `**/.*`)
 
 **Type**: `(source: IFS, searchPath: string, options: MatchOptions) => string[]`
 

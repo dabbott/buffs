@@ -1,6 +1,6 @@
 import fs from 'fs'
-import path from 'path'
 import os from 'os'
+import path from 'path'
 
 const { S_IFREG, S_IFDIR } = fs.constants
 
@@ -175,13 +175,13 @@ describe('Copy', () => {
     })
 
     afterEach(() => {
-      fs.rmdirSync(tmp, { recursive: true })
+      fs.rmSync(tmp, { recursive: true, force: true })
     })
 
     test('copies an empty fs from source (memory) to target (OS)', () => {
       const source = createFs({ foo: '123' })
 
-      expect(source.statSync('/').mode - S_IFDIR).toEqual(0o666)
+      expect(source.statSync('/').mode - S_IFDIR).toEqual(0o777)
 
       const nestedPath = path.join(tmp, 'nested')
 
@@ -201,14 +201,14 @@ describe('Copy', () => {
     test('respects copyRootPermissions (OS)', () => {
       const source = createFs()
 
-      expect(source.statSync('/').mode - S_IFDIR).toEqual(0o666)
+      expect(source.statSync('/').mode - S_IFDIR).toEqual(0o777)
 
       const nestedPath = path.join(tmp, 'nested')
 
       // OS
       copy(source, fs, '/', nestedPath, { copyRootDirectoryPermissions: true })
 
-      expect(fs.statSync(nestedPath).mode - S_IFDIR).toEqual(0o666)
+      expect(fs.statSync(nestedPath).mode - S_IFDIR).toEqual(0o777)
 
       // Memory
       const target = createFs({}, tmp)
@@ -217,7 +217,7 @@ describe('Copy', () => {
         copyRootDirectoryPermissions: true,
       })
 
-      expect(target.statSync(nestedPath).mode - S_IFDIR).toEqual(0o666)
+      expect(target.statSync(nestedPath).mode - S_IFDIR).toEqual(0o777)
     })
   })
 })

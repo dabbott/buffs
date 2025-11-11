@@ -1,5 +1,5 @@
 import path from 'path'
-import { IFS } from 'unionfs/lib/fs'
+import type { IFS } from './ifs'
 import { DirectoryBufferJSON, fromJSON } from './json'
 import { isDirectory } from './utils'
 import { visit } from './visit'

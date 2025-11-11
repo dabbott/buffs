@@ -5,11 +5,28 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22, 24]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v4
+      - name: Enable Corepack (pnpm shim)
+        run: corepack enable
+      - uses: actions/setup-node@v6
         with:
-          node-version: '12.x'
-      - run: yarn
-      - run: yarn test
-      - run: yarn build
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Pin pnpm version
+        run: corepack prepare pnpm@10.21.0 --activate
+      - name: Disable funding messages
+        run: pnpm config set fund false
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --silent
+      - name: Typecheck
+        run: pnpm run typecheck
+      - name: Run tests
+        run: pnpm test
+      - name: Build
+        run: pnpm run build

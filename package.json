@@ -2,36 +2,41 @@
   "name": "buffs",
   "version": "0.6.0",
   "description": "A filesystem utility, supporting batch & in-memory operations.",
-  "main": "lib/index.js",
+  "main": "lib/index.cjs",
+  "module": "lib/index.mjs",
   "files": [
     "lib"
   ],
   "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.cjs"
+    }
+  },
   "scripts": {
-    "build": "rm -rf ./lib && tsc --declaration",
-    "build:watch": "rm -rf ./lib && tsc --declaration --watch",
-    "test": "jest",
-    "test:watch": "jest --watch",
+    "build": "rm -rf ./lib && tsup",
+    "build:watch": "rm -rf ./lib && tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit"
   },
   "repository": "https://github.com/dabbott/devfs",
   "license": "MIT",
   "dependencies": {
-    "memfs": "^3.1.2",
-    "micromatch": "^4.0.2",
-    "tree-visit": "0.5.1",
-    "unionfs": "^4.4.0"
+    "memfs": "^4.50.0",
+    "tree-visit": "0.5.1"
   },
   "devDependencies": {
-    "@types/jest": "^25.1.3",
-    "@types/micromatch": "^4.0.1",
-    "@types/node": "^13.7.6",
-    "jest": "^25.1.0",
-    "prettier": "^2.0.5",
-    "ts-jest": "^25.2.1",
-    "ts-node": "^8.6.2",
-    "typescript": "^3.8.2"
+    "micromatch": "^4.0.8",
+    "@types/micromatch": "^4.0.10",
+    "@types/node": "^22.19.0",
+    "tsup": "^8.3.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.4"
   },
   "prettier": {
     "proseWrap": "never",
@@ -39,11 +44,5 @@
     "trailingComma": "es5",
     "semi": false
   },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "testPathIgnorePatterns": [
-      "lib"
-    ]
-  }
+  "packageManager": "pnpm@10.21.0"
 }
