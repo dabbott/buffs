@@ -12,7 +12,8 @@
     "build:watch": "rm -rf ./lib && tsc --declaration --watch",
     "test": "jest",
     "test:watch": "jest --watch",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "typecheck": "tsc --noEmit"
   },
   "repository": "https://github.com/dabbott/devfs",
   "license": "MIT",
