@@ -44,5 +44,5 @@
     "trailingComma": "es5",
     "semi": false
   },
-  "packageManager": "npm@10"
+  "packageManager": "pnpm@10.21.0"
 }
