@@ -20,8 +20,7 @@
   "dependencies": {
     "memfs": "^4.50.0",
     "micromatch": "^4.0.8",
-    "tree-visit": "0.5.1",
-    "unionfs": "^4.6.0"
+    "tree-visit": "0.5.1"
   },
   "devDependencies": {
     "@babel/core": "^7.28.5",

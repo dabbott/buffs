@@ -1,4 +1,4 @@
-export { IFS } from 'unionfs/lib/fs'
+export type { IFS } from './ifs'
 
 export * from './create'
 export * from './copy'

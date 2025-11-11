@@ -1,6 +1,6 @@
 import { createFsFromVolume, DirectoryJSON, Volume } from 'memfs'
 import path from 'path'
-import { IFS } from 'unionfs/lib/fs'
+import type { IFS } from './ifs'
 import { isDirectory } from './utils'
 import { visit } from './visit'
 

@@ -1,4 +1,4 @@
-import { IFS } from 'unionfs/lib/fs'
+import type { IFS } from './ifs'
 
 export function isDirectory(source: IFS, path: string) {
   return source.lstatSync(path).isDirectory()

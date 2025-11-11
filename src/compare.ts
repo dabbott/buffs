@@ -1,4 +1,4 @@
-import { IFS } from 'unionfs/lib/fs'
+import type { IFS } from './ifs'
 import { isDirectory } from './utils'
 
 export enum CompareResult {

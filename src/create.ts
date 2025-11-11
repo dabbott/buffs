@@ -1,5 +1,5 @@
 import { createFsFromVolume, DirectoryJSON, Volume } from 'memfs'
-import { IFS } from 'unionfs/lib/fs'
+import type { IFS } from './ifs'
 import { fromJSON } from './json'
 
 /**
