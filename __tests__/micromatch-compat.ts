@@ -22,6 +22,11 @@ describe('Micromatch compatibility', () => {
       '*.js',
       'a/**',
       '**',
+      'a/*',
+      'a/*/*.js',
+      'a/**/c.js',
+      'a/?/c.js',
+      '**/*',
     ]
 
     for (const pat of patterns) {
@@ -39,7 +44,7 @@ describe('Micromatch compatibility', () => {
       'a/x.txt': '',
     })
 
-    const patterns = ['**/*.js', '*.js', '**/*']
+    const patterns = ['**/*.js', '*.js', '**/*', '*', '*/**', '?/*.js']
     for (const pat of patterns) {
       const ours = match(fs, '/a', { includePatterns: [pat] })
       const candidates = find(fs as any, '/a', { include: () => true })

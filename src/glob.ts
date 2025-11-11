@@ -9,7 +9,12 @@ function escapeRegex(s: string) {
 
 function segmentToRegex(seg: string): RegExp {
   if (seg === '*') return /^.*$/
-  const pattern = '^' + escapeRegex(seg).replace(/\\\*/g, '.*') + '$'
+  const pattern =
+    '^' +
+    escapeRegex(seg)
+      .replace(/\\\*/g, '.*')
+      .replace(/\\\?/g, '.') +
+    '$'
   return new RegExp(pattern)
 }
 
@@ -23,7 +28,13 @@ function matchSegments(pats: string[], parts: string[], pi = 0, si = 0): boolean
       // collapse consecutive '**'
       while (pi + 1 < plen && pats[pi + 1] === '**') pi++
       if (pi + 1 === plen) {
-        // trailing ** matches the rest
+        // trailing **: require at least one more segment if previous pattern had a wildcard
+        // to better align with micromatch behaviour for patterns like '*/**'
+        const prev = pi > 0 ? pats[pi - 1] : undefined
+        if (prev && /[\*\?]/.test(prev)) {
+          return si < slen
+        }
+        // otherwise allow zero segments (e.g., 'a/**' matches 'a')
         return true
       }
       // try to match next segment at any depth
@@ -40,7 +51,16 @@ function matchSegments(pats: string[], parts: string[], pi = 0, si = 0): boolean
   }
 
   if (si === slen) {
-    for (; pi < plen; pi++) if (pats[pi] !== '**') return false
+    for (; pi < plen; pi++) {
+      if (pats[pi] !== '**') return false
+      // if a trailing '**' remains and previous segment had wildcard, require at least one more path segment
+      if (pi === plen - 1) {
+        const prev = pi > 0 ? pats[pi - 1] : undefined
+        if (prev && /[\*\?]/.test(prev)) {
+          return false
+        }
+      }
+    }
     return true
   }
   return false
@@ -58,4 +78,3 @@ export function isMatch(path: string, patterns: string[]): boolean {
     return matchSegments(patSegs, pathSegs)
   })
 }
-
