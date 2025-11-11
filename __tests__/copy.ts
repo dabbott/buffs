@@ -1,6 +1,6 @@
 import fs from 'fs'
-import path from 'path'
 import os from 'os'
+import path from 'path'
 
 const { S_IFREG, S_IFDIR } = fs.constants
 
@@ -175,7 +175,7 @@ describe('Copy', () => {
     })
 
     afterEach(() => {
-      fs.rmdirSync(tmp, { recursive: true })
+      fs.rmSync(tmp, { recursive: true, force: true })
     })
 
     test('copies an empty fs from source (memory) to target (OS)', () => {
