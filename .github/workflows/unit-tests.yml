@@ -11,13 +11,15 @@ jobs:
         node-version: [20, 22, 24]
     steps:
       - uses: actions/checkout@v4
+      - name: Enable Corepack (pnpm shim)
+        run: corepack enable
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
-      - name: Enable Corepack
-        run: corepack enable
+      - name: Pin pnpm version
+        run: corepack prepare pnpm@10.21.0 --activate
       - name: Disable funding messages
         run: pnpm config set fund false
       - name: Install dependencies
