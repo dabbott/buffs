@@ -9,5 +9,12 @@
     "types": ["node"],
     "lib": ["ESNext"]
   },
-  "exclude": ["node_modules", "__tests__/**/*.ts", "lib", "vitest.config.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "__tests__/**/*.ts",
+    "lib",
+    "vitest.config.mts",
+    "tsup.config.ts"
+  ]
 }

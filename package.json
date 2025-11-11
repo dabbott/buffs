@@ -2,14 +2,22 @@
   "name": "buffs",
   "version": "0.6.0",
   "description": "A filesystem utility, supporting batch & in-memory operations.",
-  "main": "lib/index.js",
+  "main": "lib/index.cjs",
+  "module": "lib/index.mjs",
   "files": [
     "lib"
   ],
   "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.cjs"
+    }
+  },
   "scripts": {
-    "build": "rm -rf ./lib && tsc --declaration",
-    "build:watch": "rm -rf ./lib && tsc --declaration --watch",
+    "build": "rm -rf ./lib && tsup",
+    "build:watch": "rm -rf ./lib && tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest",
     "prepublishOnly": "npm run build",
@@ -25,6 +33,7 @@
     "micromatch": "^4.0.8",
     "@types/micromatch": "^4.0.10",
     "@types/node": "^22.19.0",
+    "tsup": "^8.3.0",
     "prettier": "^3.6.2",
     "typescript": "^5.9.3",
     "vitest": "^2.1.4"
