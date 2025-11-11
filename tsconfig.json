@@ -6,9 +6,8 @@
     "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
-    "types": ["node", "jest"],
-    "typeRoots": ["node_modules/@types", "src/types"],
+    "types": ["node"],
     "lib": ["ESNext"]
   },
-  "exclude": ["node_modules", "__tests__/**/*.ts", "lib"]
+  "exclude": ["node_modules", "__tests__/**/*.ts", "lib", "vitest.config.ts"]
 }

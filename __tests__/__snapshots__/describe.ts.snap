@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Describe describeComparison describes a colored fs comparison 1`] = `
+exports[`Describe > describeComparison > describes a colored fs comparison 1`] = `
 "[90mdescribe[39m
 ├── [32ma / a.txt[39m
 └── [90mb[39m
@@ -12,7 +12,7 @@ exports[`Describe describeComparison describes a colored fs comparison 1`] = `
     └── [32mf.txt[39m"
 `;
 
-exports[`Describe describeComparison describes an uncolored fs comparison 1`] = `
+exports[`Describe > describeComparison > describes an uncolored fs comparison 1`] = `
 "describe[N]
 ├── a / a.txt[A]
 └── b[N]
@@ -24,21 +24,21 @@ exports[`Describe describeComparison describes an uncolored fs comparison 1`] = 
     └── f.txt[A]"
 `;
 
-exports[`Describe describes a deeply nested fs 1`] = `
+exports[`Describe > describes a deeply nested fs 1`] = `
 "/ a / b / c / d / e / f
 ├── g.txt
 └── h.txt"
 `;
 
-exports[`Describe describes an in-memory fs 1`] = `
+exports[`Describe > describes an in-memory fs 1`] = `
 "/
 ├── a.txt
 └── b.txt"
 `;
 
-exports[`Describe describes an in-memory fs with a single file 1`] = `"/ a.txt"`;
+exports[`Describe > describes an in-memory fs with a single file 1`] = `"/ a.txt"`;
 
-exports[`Describe describes the OS fs 1`] = `
+exports[`Describe > describes the OS fs 1`] = `
 "describe
 ├── a / a.txt
 └── b
