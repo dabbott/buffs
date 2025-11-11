@@ -1,69 +1,10 @@
 import type { IFS } from './ifs'
 import { find } from './find'
+import { isMatch } from './glob'
 
 export type MatchOptions = {
   includePatterns: string[]
   excludePatterns?: string[]
-}
-
-// Lightweight glob matcher used at runtime to avoid micromatch dependency.
-// Supports:
-// - '*' within a path segment (matches any chars except '/')
-// - '**' across path segments (matches zero or more segments)
-function escapeRegex(s: string) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-function segmentToRegex(seg: string): RegExp {
-  if (seg === '*') return /^.*$/
-  const pattern = '^' + escapeRegex(seg).replace(/\\\*/g, '.*') + '$'
-  return new RegExp(pattern)
-}
-
-function matchSegments(pats: string[], parts: string[], pi = 0, si = 0): boolean {
-  const plen = pats.length
-  const slen = parts.length
-
-  while (pi < plen && si < slen) {
-    const p = pats[pi]
-    if (p === '**') {
-      // collapse consecutive '**'
-      while (pi + 1 < plen && pats[pi + 1] === '**') pi++
-      if (pi + 1 === plen) {
-        // trailing ** matches the rest
-        return true
-      }
-      // try to match next segment at any depth
-      for (let skip = 0; si + skip <= slen; skip++) {
-        if (matchSegments(pats, parts, pi + 1, si + skip)) return true
-      }
-      return false
-    } else {
-      const re = segmentToRegex(p)
-      if (!re.test(parts[si])) return false
-      pi++
-      si++
-    }
-  }
-
-  if (si === slen) {
-    for (; pi < plen; pi++) if (pats[pi] !== '**') return false
-    return true
-  }
-  return false
-}
-
-function isGlobMatch(path: string, patterns: string[]): boolean {
-  // Align with micromatch: empty path doesn't match globs like '**'
-  if (path === '' || path === '/') {
-    return patterns.some((p) => p === '' || p === '/')
-  }
-  return patterns.some((pat) => {
-    if (pat === '' || pat === '/') return path === '' || path === '/'
-    const patSegs = pat.split('/').filter(Boolean)
-    const pathSegs = path.split('/').filter(Boolean)
-    return matchSegments(patSegs, pathSegs)
-  })
 }
 
 export function match(
@@ -75,13 +16,13 @@ export function match(
 
   return find(source, searchPath, {
     include: (currentPath) => {
-      return isGlobMatch(currentPath, includePatterns)
+      return isMatch(currentPath, includePatterns)
     },
 
     exclude: (currentPath) => {
       if (!excludePatterns) return false
 
-      return isGlobMatch(currentPath, excludePatterns)
+      return isMatch(currentPath, excludePatterns)
     },
   })
 }
