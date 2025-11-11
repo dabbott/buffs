@@ -72,6 +72,10 @@ describe('Micromatch compatibility', () => {
       'a/c.js': '',
       'a/!.js': '',
       'a/-.js': '',
+      'a/].js': '',
+      'a/ .js': '',
+      'a/\t.js': '',
+      'a/\x01.js': '',
       'a/star*.js': '',
       'a/qmark?.js': '',
       'a/paren(name).js': '',
@@ -95,6 +99,9 @@ describe('Micromatch compatibility', () => {
       'a/[[:graph:]].js',
       'a/[[:print:]].js',
       'a/[[:punct:]].js',
+      'a/[[:ascii:]].js',
+      'a/[[:cntrl:]].js',
+      'a/[[:blank:]].js',
       'a/[[:^digit:]].js',
       'a/file[[:digit:]].txt',
       'a/file[0-9].txt',
@@ -102,6 +109,8 @@ describe('Micromatch compatibility', () => {
       '{a.js,b.txt}',
       'a/file{1..2}.txt',
       'a/file{01..02}.txt',
+      'a/{@(a|b),c}.js',
+      'a/@(a|{b,c}).js',
       '@(a|b).js',
       '!(c).js',
       '+(b).js',
@@ -115,6 +124,8 @@ describe('Micromatch compatibility', () => {
       'a/plus\\+.js',
       'a/at\\@.js',
       'a/\\[br\\].js',
+      'a/[\\-].js',
+      'a/[\\]].js',
     ]
     for (const pat of patterns) {
       const root =

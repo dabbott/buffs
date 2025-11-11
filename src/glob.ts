@@ -129,6 +129,13 @@ function parseCharClass(seg: string, i: number): [string, number] {
     j++
   }
   while (j < seg.length && seg[j] !== ']') {
+    if (seg[j] === '\\' && j + 1 < seg.length) {
+      // keep escapes inside character classes
+      content += '\\' + seg[j + 1]
+      j += 2
+      continue
+    }
+    if (seg[j] === ']') break
     content += seg[j]
     j++
   }
