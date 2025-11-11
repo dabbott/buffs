@@ -27,6 +27,7 @@ describe('Micromatch compatibility', () => {
       'a/**/c.js',
       'a/?/c.js',
       '**/*',
+      'a/**',
     ]
 
     for (const pat of patterns) {

@@ -145,6 +145,8 @@ function parseCharClass(seg: string, i: number): [string, number] {
     'punct': '!"#$%&\'()*+,\\-./:;<=>?@\\[\\]^_`{|}~',
     'graph': '!-~',
     'print': ' -~',
+    'ascii': '\\x00-\\x7F',
+    'cntrl': '\\x00-\\x1F\\x7F',
   }
   content = content.replace(/\[:([a-z]+):\]/g, (_m, name) => posixMap[name] || _m)
   const cls = '[' + (negate ? '^' : '') + content + ']'
@@ -168,10 +170,20 @@ function matchSegments(pats: string[], parts: string[], pi = 0, si = 0): boolean
           return si < slen
         }
         // otherwise allow zero segments (e.g., 'a/**' matches 'a')
+        // but do not match dot segments by default
+        for (let k = si; k < slen; k++) {
+          if (parts[k].startsWith('.')) return false
+        }
         return true
       }
       // try to match next segment at any depth
       for (let skip = 0; si + skip <= slen; skip++) {
+        // '**' cannot consume segments that start with '.' when dot=false
+        let hasDot = false
+        for (let k = si; k < si + skip; k++) {
+          if (parts[k].startsWith('.')) { hasDot = true; break }
+        }
+        if (hasDot) continue
         if (matchSegments(pats, parts, pi + 1, si + skip)) return true
       }
       return false
