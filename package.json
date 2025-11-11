@@ -34,5 +34,6 @@
     "singleQuote": true,
     "trailingComma": "es5",
     "semi": false
-  }
+  },
+  "packageManager": "npm@10"
 }
