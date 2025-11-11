@@ -18,20 +18,23 @@
   "repository": "https://github.com/dabbott/devfs",
   "license": "MIT",
   "dependencies": {
-    "memfs": "^3.1.2",
-    "micromatch": "^4.0.2",
+    "memfs": "^4.50.0",
+    "micromatch": "^4.0.8",
     "tree-visit": "0.5.1",
-    "unionfs": "^4.4.0"
+    "unionfs": "^4.6.0"
   },
   "devDependencies": {
-    "@types/jest": "^25.1.3",
-    "@types/micromatch": "^4.0.1",
-    "@types/node": "^13.7.6",
-    "jest": "^25.1.0",
-    "prettier": "^2.0.5",
-    "ts-jest": "^25.2.1",
-    "ts-node": "^8.6.2",
-    "typescript": "^3.8.2"
+    "@babel/core": "^7.28.5",
+    "@babel/plugin-transform-modules-commonjs": "^7.27.1",
+    "@babel/preset-typescript": "^7.28.5",
+    "@types/jest": "^30.0.0",
+    "@types/micromatch": "^4.0.10",
+    "@types/node": "^22.19.0",
+    "babel-jest": "^30.2.0",
+    "jest": "^30.2.0",
+    "prettier": "^3.6.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   },
   "prettier": {
     "proseWrap": "never",
@@ -40,10 +43,25 @@
     "semi": false
   },
   "jest": {
-    "preset": "ts-jest",
+    "transform": {
+      "^.+\\.(ts|tsx)$": [
+        "babel-jest",
+        {
+          "presets": [
+            "@babel/preset-typescript"
+          ]
+        }
+      ]
+    },
     "testEnvironment": "node",
     "testPathIgnorePatterns": [
       "lib"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
     ]
   }
 }

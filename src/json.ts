@@ -32,14 +32,16 @@ export function fromJSON(
   const volume = new Volume()
   const fs = createFsFromVolume(volume)
 
+  // Use memfs defaults for permissions
+
   Object.entries(json).forEach(([key, value]) => {
     const fullPath = path.join(rootPath, key)
 
     if (value !== null) {
-      fs.mkdirpSync(path.dirname(fullPath))
+      fs.mkdirSync(path.dirname(fullPath), { recursive: true })
       fs.writeFileSync(fullPath, value)
     } else {
-      fs.mkdirpSync(fullPath)
+      fs.mkdirSync(fullPath, { recursive: true })
     }
   })
 
