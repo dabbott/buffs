@@ -1,6 +1,7 @@
 import path from 'path'
-import { createFs, toBSON, fromBSON, toJSON } from '../src'
-import { encodeDocument, decodeDocument } from '../src/bson'
+import { describe, expect, test } from 'vitest'
+import { createFs, fromBSON, toBSON, toJSON } from '../src'
+import { decodeDocument, encodeDocument } from '../src/bson'
 import { isDirectory } from '../src/utils'
 
 const mocksPath = path.join(__dirname, 'mocks')

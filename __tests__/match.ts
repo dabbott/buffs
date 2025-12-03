@@ -1,3 +1,4 @@
+import { expect, it, test } from 'vitest'
 import { createFs, match } from '../src'
 
 test('matches paths', () => {

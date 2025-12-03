@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
-import { find, createFs } from '../src/index'
+import { expect, it, test } from 'vitest'
+import { createFs, find } from '../src/index'
 
 const nestedMockPath = path.join(__dirname, 'mocks', 'nested')
 
