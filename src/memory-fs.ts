@@ -7,7 +7,6 @@ const S_IFREG = 0o100000
 const DEFAULT_DIR_PERMISSIONS = 0o777
 const DEFAULT_FILE_PERMISSIONS = 0o666
 const DEFAULT_DIR_MODE = S_IFDIR | DEFAULT_DIR_PERMISSIONS
-const DEFAULT_FILE_MODE = S_IFREG | DEFAULT_FILE_PERMISSIONS
 const BLOCK_SIZE = 4096
 
 export type DirectoryJSON = Record<string, string | null>
@@ -24,6 +23,7 @@ type Timestamps = {
 
 type DirectoryNode = {
   type: 'dir'
+  ino: number
   children: Map<string, FileSystemNode>
   mode: number
   times: Timestamps
@@ -31,6 +31,7 @@ type DirectoryNode = {
 
 type FileNode = {
   type: 'file'
+  ino: number
   data: Buffer
   mode: number
   times: Timestamps
@@ -61,9 +62,9 @@ class MemoryStats implements Stats {
   dev = 0
   ino = 0
   mode: number
-  nlink = 1
-  uid = 0
-  gid = 0
+  nlink: number
+  uid: number
+  gid: number
   rdev = 0
   size: number
   blksize = BLOCK_SIZE
@@ -77,10 +78,20 @@ class MemoryStats implements Stats {
   ctime: Date
   birthtime: Date
 
-  constructor(type: NodeType, mode: number, size: number, times: Timestamps) {
+  constructor(
+    type: NodeType,
+    mode: number,
+    size: number,
+    times: Timestamps,
+    meta: { ino: number; uid: number; gid: number; nlink: number }
+  ) {
     this.type = type
     this.mode = mode
     this.size = size
+    this.nlink = meta.nlink
+    this.ino = meta.ino
+    this.uid = meta.uid
+    this.gid = meta.gid
     this.atime = cloneDate(times.atime)
     this.mtime = cloneDate(times.mtime)
     this.ctime = cloneDate(times.ctime)
@@ -89,6 +100,7 @@ class MemoryStats implements Stats {
     this.mtimeMs = this.mtime.getTime()
     this.ctimeMs = this.ctime.getTime()
     this.birthtimeMs = this.birthtime.getTime()
+    this.blocks = Math.max(1, Math.ceil(size / BLOCK_SIZE))
   }
 
   isFile(): boolean {
@@ -118,14 +130,28 @@ class MemoryStats implements Stats {
   isSocket(): boolean {
     return false
   }
-}
 
-function createDirectoryNode(mode: number = DEFAULT_DIR_MODE): DirectoryNode {
-  return {
-    type: 'dir',
-    children: new Map(),
-    mode,
-    times: createTimes(),
+  toJSON() {
+    return {
+      dev: this.dev,
+      ino: this.ino,
+      mode: this.mode,
+      nlink: this.nlink,
+      uid: this.uid,
+      gid: this.gid,
+      rdev: this.rdev,
+      size: this.size,
+      blksize: this.blksize,
+      blocks: this.blocks,
+      atimeMs: this.atimeMs,
+      mtimeMs: this.mtimeMs,
+      ctimeMs: this.ctimeMs,
+      birthtimeMs: this.birthtimeMs,
+      atime: cloneDate(this.atime),
+      mtime: cloneDate(this.mtime),
+      ctime: cloneDate(this.ctime),
+      birthtime: cloneDate(this.birthtime),
+    }
   }
 }
 
@@ -191,12 +217,48 @@ function createErr(code: string, message: string): NodeJS.ErrnoException {
 }
 
 export class MemoryFS implements IFS {
-  private root: DirectoryNode = createDirectoryNode()
+  private root: DirectoryNode
   private nextFd = 3
   private fds = new Map<number, FileSystemNode>()
+  private nextIno = 1
+  private uid: number
+  private gid: number
+
+  constructor() {
+    this.uid = typeof process.getuid === 'function' ? process.getuid() : 0
+    this.gid = typeof process.getgid === 'function' ? process.getgid() : 0
+    this.root = this.createDirectoryNode(DEFAULT_DIR_MODE)
+  }
 
   private normalize(inputPath: string): string {
     return path.resolve('/', inputPath || '/')
+  }
+
+  private allocateIno(): number {
+    return this.nextIno++
+  }
+
+  private createDirectoryNode(mode: number = DEFAULT_DIR_MODE): DirectoryNode {
+    return {
+      type: 'dir',
+      ino: this.allocateIno(),
+      children: new Map(),
+      mode,
+      times: createTimes(),
+    }
+  }
+
+  private createFileNode(
+    data: Buffer,
+    mode: number = DEFAULT_FILE_PERMISSIONS
+  ): FileNode {
+    return {
+      type: 'file',
+      ino: this.allocateIno(),
+      data,
+      mode: applyMode('file', mode),
+      times: createTimes(),
+    }
   }
 
   private getNode(targetPath: string): FileSystemNode {
@@ -262,7 +324,7 @@ export class MemoryFS implements IFS {
           throw createErr('ENOENT', `ENOENT: no such file or directory, mkdir '${targetPath}'`)
         }
 
-        const newDir = createDirectoryNode()
+        const newDir = this.createDirectoryNode()
         current.children.set(part, newDir)
         current = newDir
       } else {
@@ -278,8 +340,19 @@ export class MemoryFS implements IFS {
   }
 
   private createStats(node: FileSystemNode): Stats {
-    const size = node.type === 'file' ? node.data.length : node.children.size
-    return new MemoryStats(node.type, node.mode, size, node.times)
+    const size = node.type === 'file' ? node.data.length : 0
+    const nlink =
+      node.type === 'dir'
+        ? 2 +
+          [...node.children.values()].filter((child) => child.type === 'dir').length
+        : 1
+
+    return new MemoryStats(node.type, node.mode, size, node.times, {
+      ino: node.ino,
+      uid: this.uid,
+      gid: this.gid,
+      nlink,
+    })
   }
 
   private touch(node: FileSystemNode): void {
@@ -332,14 +405,7 @@ export class MemoryFS implements IFS {
       return
     }
 
-    const file: FileNode = {
-      type: 'file',
-      data: buffer,
-      mode: DEFAULT_FILE_MODE,
-      times: createTimes(),
-    }
-
-    parent.children.set(name, file)
+    parent.children.set(name, this.createFileNode(buffer))
   }
 
   mkdirSync(
@@ -368,7 +434,7 @@ export class MemoryFS implements IFS {
           throw createErr('ENOENT', `ENOENT: no such file or directory, mkdir '${targetPath}'`)
         }
 
-        const newDir = createDirectoryNode(last ? mode : DEFAULT_DIR_MODE)
+        const newDir = this.createDirectoryNode(last ? mode : DEFAULT_DIR_MODE)
         current.children.set(part, newDir)
         current = newDir
       } else {
@@ -413,12 +479,7 @@ export class MemoryFS implements IFS {
       }
 
       const { parent, name } = this.resolveParent(normalized, false)
-      node = {
-        type: 'file',
-        data: Buffer.alloc(0),
-        mode: applyMode('file', mode ?? DEFAULT_FILE_PERMISSIONS),
-        times: createTimes(),
-      }
+      node = this.createFileNode(Buffer.alloc(0), mode ?? DEFAULT_FILE_PERMISSIONS)
       parent.children.set(name, node)
     }
 

@@ -1,5 +1,5 @@
 import { createFsFromVolume, Volume } from 'memfs'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { IFS, toJSON } from '../src'
 import { createMemoryFs } from '../src/memory-fs'
 
@@ -45,37 +45,78 @@ describe('MemoryFS compatibility', () => {
   })
 
   it('mirrors mutations and permissions updates', () => {
-    const { memfs, mini } = createPair()
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2020-01-01T00:00:00Z'))
 
-    memfs.mkdirSync(`${root}/nested/dir`, { recursive: true })
-    mini.mkdirSync(`${root}/nested/dir`, { recursive: true })
+    try {
+      const { memfs, mini } = createPair()
 
-    memfs.writeFileSync(`${root}/nested/dir/file.txt`, 'data')
-    mini.writeFileSync(`${root}/nested/dir/file.txt`, 'data')
+      memfs.mkdirSync(`${root}/nested/dir`, { recursive: true })
+      mini.mkdirSync(`${root}/nested/dir`, { recursive: true })
 
-    memfs.chmodSync(`${root}/nested/dir/file.txt`, 0o754)
-    mini.chmodSync(`${root}/nested/dir/file.txt`, 0o754)
+      memfs.writeFileSync(`${root}/nested/dir/file.txt`, 'data')
+      mini.writeFileSync(`${root}/nested/dir/file.txt`, 'data')
 
-    const memfd = memfs.openSync(`${root}/nested`, 'r')
-    const minifd = mini.openSync(`${root}/nested`, 'r')
+      memfs.chmodSync(`${root}/nested/dir/file.txt`, 0o754)
+      mini.chmodSync(`${root}/nested/dir/file.txt`, 0o754)
 
-    memfs.fchmodSync(memfd, 0o711)
-    mini.fchmodSync(minifd, 0o711)
+      const memfd = memfs.openSync(`${root}/nested`, 'r')
+      const minifd = mini.openSync(`${root}/nested`, 'r')
 
-    memfs.writeFileSync(`${root}/nested/dir/append.txt`, Buffer.from('first'))
-    mini.writeFileSync(`${root}/nested/dir/append.txt`, Buffer.from('first'))
+      memfs.fchmodSync(memfd, 0o711)
+      mini.fchmodSync(minifd, 0o711)
 
-    const mutatedPaths = [
-      `${root}/nested`,
-      `${root}/nested/dir`,
-      `${root}/nested/dir/file.txt`,
-      `${root}/nested/dir/append.txt`,
-    ]
+      memfs.writeFileSync(`${root}/nested/dir/append.txt`, Buffer.from('first'))
+      mini.writeFileSync(`${root}/nested/dir/append.txt`, Buffer.from('first'))
 
-    mutatedPaths.forEach((p) => {
-      expect(mini.statSync(p).mode).toEqual(memfs.statSync(p).mode)
-    })
+      const mutatedPaths = [
+        `${root}/nested`,
+        `${root}/nested/dir`,
+        `${root}/nested/dir/file.txt`,
+        `${root}/nested/dir/append.txt`,
+      ]
 
-    expect(toJSON(mini, root)).toEqual(toJSON(memfs as IFS, root))
+      const serialize = (stat: ReturnType<IFS['statSync']>) => {
+        const base =
+          typeof (stat as any).toJSON === 'function'
+            ? (stat as any).toJSON()
+            : {
+                dev: stat.dev,
+                ino: stat.ino,
+                mode: stat.mode,
+                nlink: stat.nlink,
+                uid: stat.uid,
+                gid: stat.gid,
+                rdev: stat.rdev,
+                size: stat.size,
+                blksize: (stat as any).blksize,
+                blocks: (stat as any).blocks,
+                atimeMs: stat.atimeMs,
+                mtimeMs: stat.mtimeMs,
+                ctimeMs: stat.ctimeMs,
+                birthtimeMs: stat.birthtimeMs,
+                atime: stat.atime,
+                mtime: stat.mtime,
+                ctime: stat.ctime,
+                birthtime: stat.birthtime,
+              }
+
+        return {
+          ...base,
+          isDirectory: stat.isDirectory(),
+          isFile: stat.isFile(),
+        }
+      }
+
+      mutatedPaths.forEach((p) => {
+        expect(serialize(mini.statSync(p))).toEqual(
+          serialize(memfs.statSync(p))
+        )
+      })
+
+      expect(toJSON(mini, root)).toEqual(toJSON(memfs as IFS, root))
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
