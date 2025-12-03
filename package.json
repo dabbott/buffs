@@ -26,10 +26,10 @@
   "repository": "https://github.com/dabbott/devfs",
   "license": "MIT",
   "dependencies": {
-    "memfs": "^4.50.0",
     "tree-visit": "0.6.0"
   },
   "devDependencies": {
+    "memfs": "^4.50.0",
     "micromatch": "^4.0.8",
     "@types/micromatch": "^4.0.10",
     "@types/node": "^22.19.0",

@@ -1,7 +1,6 @@
 import fs, { type Stats } from 'fs'
 import path from 'path'
 import type { IFS } from './ifs'
-import type { DirectoryBufferJSON } from './json'
 
 const S_IFDIR = 0o040000
 const S_IFREG = 0o100000
@@ -10,6 +9,9 @@ const DEFAULT_FILE_PERMISSIONS = 0o666
 const DEFAULT_DIR_MODE = S_IFDIR | DEFAULT_DIR_PERMISSIONS
 const DEFAULT_FILE_MODE = S_IFREG | DEFAULT_FILE_PERMISSIONS
 const BLOCK_SIZE = 4096
+
+export type DirectoryJSON = Record<string, string | null>
+export type DirectoryBufferJSON = Record<string, string | Buffer | null>
 
 type NodeType = 'file' | 'dir'
 

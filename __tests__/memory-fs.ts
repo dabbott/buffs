@@ -1,5 +1,6 @@
+import { createFsFromVolume, Volume } from 'memfs'
 import { describe, expect, it } from 'vitest'
-import { createFs, createMemoryFs, toJSON } from '../src'
+import { createMemoryFs, IFS, toJSON } from '../src'
 
 const initial = {
   'a/a.txt': 'hello',
@@ -10,8 +11,11 @@ const initial = {
 const root = '/root'
 
 function createPair() {
+  const vol = new Volume()
+  vol.fromJSON(initial, root)
+
   return {
-    memfs: createFs(initial, root),
+    memfs: createFsFromVolume(vol),
     mini: createMemoryFs(initial, root),
   }
 }
@@ -60,6 +64,6 @@ describe('MemoryFS compatibility', () => {
     memfs.writeFileSync(`${root}/nested/dir/append.txt`, Buffer.from('first'))
     mini.writeFileSync(`${root}/nested/dir/append.txt`, Buffer.from('first'))
 
-    expect(toJSON(mini, root)).toEqual(toJSON(memfs, root))
+    expect(toJSON(mini, root)).toEqual(toJSON(memfs as IFS, root))
   })
 })
