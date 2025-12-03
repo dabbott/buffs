@@ -1,13 +1,11 @@
 import path from 'path'
 import type { IFS } from './ifs'
-import {
-  visit as visitTree,
-  EnterReturnValue,
-  LeaveReturnValue,
-} from 'tree-visit'
+import { visit as visitTree, SKIP, STOP } from 'tree-visit'
+import type { EnterReturnValue, LeaveReturnValue } from 'tree-visit'
 import { isDirectory } from './utils'
 
-export { EnterReturnValue, LeaveReturnValue, SKIP, STOP } from 'tree-visit'
+export { SKIP, STOP }
+export type { EnterReturnValue, LeaveReturnValue }
 
 export type VisitOptions = {
   onEnter?: (currentPath: string) => EnterReturnValue
