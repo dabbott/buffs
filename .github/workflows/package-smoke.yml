@@ -1,0 +1,73 @@
+name: Package smoke
+
+on: [push, pull_request]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22, 24]
+    name: Package smoke (Node ${{ matrix.node-version }})
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable Corepack (pnpm shim)
+        run: corepack enable
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Pin pnpm version
+        run: corepack prepare pnpm@10.21.0 --activate
+      - name: Disable funding messages
+        run: pnpm config set fund false
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --silent
+      - name: Build package
+        run: pnpm run build
+      - name: Verify packaged exports
+        run: |
+          set -euo pipefail
+          TGZ=$(npm pack)
+          TMPDIR=$(mktemp -d)
+          pushd "$TMPDIR" >/dev/null
+          npm init -y >/dev/null
+          npm install --silent "$GITHUB_WORKSPACE/$TGZ" typescript >/dev/null
+          node - <<'NODE'
+          const pkg = require('buffs')
+          if (typeof pkg.createFs !== 'function') {
+            throw new Error('Expected createFs export in CJS bundle')
+          }
+          if (typeof pkg.copy !== 'function') {
+            throw new Error('Expected copy export in CJS bundle')
+          }
+          console.log('CJS consumer OK')
+          NODE
+          node --input-type=module - <<'NODE'
+          import * as mod from 'buffs'
+          if (typeof mod.createFs !== 'function') {
+            throw new Error('Expected createFs export in ESM bundle')
+          }
+          if (typeof mod.copy !== 'function') {
+            throw new Error('Expected copy export in ESM bundle')
+          }
+          console.log('ESM consumer OK')
+          NODE
+          cat <<'TS' > smoke.ts
+          import type { IFS } from 'buffs'
+          import { createFs, copy, describe } from 'buffs'
+
+          const source: IFS = createFs({ '/a.txt': 'a' })
+          const target: IFS = createFs()
+          copy(source, target, '/')
+          const summary = describe(target, '/')
+
+          if (!summary.includes('a.txt')) {
+            throw new Error('Expected copied file in description output')
+          }
+          TS
+          npx tsc smoke.ts --moduleResolution nodenext --module nodenext --target es2020 --noEmit
+          popd >/dev/null
+          rm "$GITHUB_WORKSPACE/$TGZ"
