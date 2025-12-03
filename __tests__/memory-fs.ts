@@ -65,6 +65,17 @@ describe('MemoryFS compatibility', () => {
     memfs.writeFileSync(`${root}/nested/dir/append.txt`, Buffer.from('first'))
     mini.writeFileSync(`${root}/nested/dir/append.txt`, Buffer.from('first'))
 
+    const mutatedPaths = [
+      `${root}/nested`,
+      `${root}/nested/dir`,
+      `${root}/nested/dir/file.txt`,
+      `${root}/nested/dir/append.txt`,
+    ]
+
+    mutatedPaths.forEach((p) => {
+      expect(mini.statSync(p).mode).toEqual(memfs.statSync(p).mode)
+    })
+
     expect(toJSON(mini, root)).toEqual(toJSON(memfs as IFS, root))
   })
 })
