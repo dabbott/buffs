@@ -1,6 +1,7 @@
 import { createFsFromVolume, Volume } from 'memfs'
 import { describe, expect, it } from 'vitest'
-import { createMemoryFs, IFS, toJSON } from '../src'
+import { IFS, toJSON } from '../src'
+import { createMemoryFs } from '../src/memory-fs'
 
 const initial = {
   'a/a.txt': 'hello',
