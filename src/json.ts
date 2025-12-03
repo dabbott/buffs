@@ -1,6 +1,6 @@
-import { createFsFromVolume, DirectoryJSON, Volume } from 'memfs'
 import path from 'path'
 import type { IFS } from './ifs'
+import { DirectoryBufferJSON, DirectoryJSON, createMemoryFs } from './memory-fs'
 import { isDirectory } from './utils'
 import { visit } from './visit'
 
@@ -23,27 +23,12 @@ export function toJSON(source: IFS, rootPath: string = '/'): DirectoryJSON {
   return result
 }
 
-export type DirectoryBufferJSON = Record<string, string | Buffer | null>
+export type { DirectoryBufferJSON, DirectoryJSON }
 
 export function fromJSON(
   json: DirectoryBufferJSON,
   rootPath: string = '/'
 ): IFS {
-  const volume = new Volume()
-  const fs = createFsFromVolume(volume)
-
-  // Use memfs defaults for permissions
-
-  Object.entries(json).forEach(([key, value]) => {
-    const fullPath = path.join(rootPath, key)
-
-    if (value !== null) {
-      fs.mkdirSync(path.dirname(fullPath), { recursive: true })
-      fs.writeFileSync(fullPath, value)
-    } else {
-      fs.mkdirSync(fullPath, { recursive: true })
-    }
-  })
-
-  return fs as any
+  // Reuse the MemoryFS machinery so behavior mirrors the default factory.
+  return createMemoryFs(json, rootPath)
 }

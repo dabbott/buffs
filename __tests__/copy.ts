@@ -1,6 +1,7 @@
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
+import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 
 const { S_IFREG, S_IFDIR } = fs.constants
 

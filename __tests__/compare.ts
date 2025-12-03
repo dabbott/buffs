@@ -1,4 +1,5 @@
-import { compareFile, createFs, CompareResult } from '../src/index'
+import { describe, expect, test } from 'vitest'
+import { compareFile, CompareResult, createFs } from '../src/index'
 
 const testFilePath = '/a.txt'
 

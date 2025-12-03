@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest'
 import { fromJSON, toJSON } from '../src/index'
 
 describe('Create', () => {

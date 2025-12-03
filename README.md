@@ -50,9 +50,9 @@ copy(source, fs, '/', process.cwd())
 
 Create an in-memory filesystem.
 
-This is a wrapper around [`memfs`](https://github.com/streamich/memfs).
+This uses a lightweight built-in memory filesystem.
 
-**Type**: `(json: DirectoryJSON = {}, cwd?: string) => { volume: VolumeType; fs: IFS }`
+**Type**: `(json: DirectoryJSON = {}, cwd?: string) => IFS`
 
 ```js
 import { createFs } from 'buffs'

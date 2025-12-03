@@ -1,11 +1,12 @@
 import fs from 'fs'
 import path from 'path'
+import { describe, expect, test } from 'vitest'
 import colors from '../src/colors'
 
 import {
-  describe as describeFS,
-  describeComparison,
   createFs,
+  describeComparison,
+  describe as describeFS,
 } from '../src/index'
 
 const mocksPath = path.join(__dirname, 'mocks')
