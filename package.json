@@ -27,7 +27,7 @@
   "license": "MIT",
   "dependencies": {
     "memfs": "^4.50.0",
-    "tree-visit": "0.5.1"
+    "tree-visit": "0.6.0"
   },
   "devDependencies": {
     "micromatch": "^4.0.8",

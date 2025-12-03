@@ -12,8 +12,8 @@ importers:
         specifier: ^4.50.0
         version: 4.50.0
       tree-visit:
-        specifier: 0.5.1
-        version: 0.5.1
+        specifier: 0.6.0
+        version: 0.6.0
     devDependencies:
       '@types/micromatch':
         specifier: ^4.0.10
@@ -963,8 +963,8 @@ packages:
     resolution: {integrity: sha512-L0Orpi8qGpRG//Nd+H90vFB+3iHnue1zSSGmNOOCh1GLJ7rUKVwV2HvijphGQS2UmhUZewS9VgvxYIdgr+fG1A==}
     hasBin: true
 
-  tree-visit@0.5.1:
-    resolution: {integrity: sha512-Inp/DTkzUQorIWIEyy/6TipYXDdJD00eBDEshbmmcb5eLs7u2vZlNz4a4gBpLJcE8gKylYDhaweRDQ8BOoH+Dw==}
+  tree-visit@0.6.0:
+    resolution: {integrity: sha512-ABeWoMNMyW/caKUPW//hJ53v+xdxAIingQ2r+uxFgX4ydI6obOzL/4SNKsSggRzq4mogYQCCprpSIUI/4ZiRsw==}
 
   ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
@@ -1830,7 +1830,7 @@ snapshots:
 
   tree-kill@1.2.2: {}
 
-  tree-visit@0.5.1: {}
+  tree-visit@0.6.0: {}
 
   ts-interface-checker@0.1.13: {}
 
