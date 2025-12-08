@@ -8,15 +8,20 @@ npm install --save buffs
 
 ## API
 
-Every API works both on the real filesystem and in-memory filesystems created by [`createFs`](#createFs).
+Every API works both on the real filesystem and in-memory filesystems created by [`createFs`](#createfs).
 
 - [copy](#copy)
-- [createFs](#createFs)
+- [createFs](#createfs)
 - [describe](#describe)
-- [describeComparison](#describeComparison)
+- [describeComparison](#describecomparison)
+- [compareFile](#comparefile)
 - [find](#find)
 - [match](#match)
-- [toJSON](#toJSON)
+- [toJSON](#tojson)
+- [fromJSON](#fromjson)
+- [toBSON](#tobson)
+- [fromBSON](#frombson)
+- [MemoryFS](#memoryfs)
 - [visit](#visit)
 
 ---
@@ -122,6 +127,29 @@ console.log(description)
 
 ---
 
+### `compareFile`
+
+Compare a single file or directory path between two filesystems.
+
+**Type**: `(source: IFS, target: IFS, filePath: string) => CompareResult`
+
+`CompareResult` values: `Added` (`A`), `Modified` (`M`), `Removed` (`R`), `NoChange` (`N`).
+
+#### Example
+
+```js
+import { compareFile, CompareResult, createFs } from 'buffs'
+
+const source = createFs({ '/a.txt': 'hello' })
+const target = createFs({ '/a.txt': 'hello world' })
+
+const result = compareFile(source, target, '/a.txt')
+
+console.log(result === CompareResult.Modified) // true
+```
+
+---
+
 ### `find`
 
 Find files and directories using an `include` predicate function.
@@ -195,12 +223,12 @@ console.log(files)
 
 Convert a directory and all its files, recursively, to a JSON dictionary.
 
-**Type**: `(source: IFS, rootPath: string) => DirectoryJSON`
+**Type**: `(source: IFS, rootPath?: string) => DirectoryJSON`
 
 #### Example
 
 ```js
-import { createFs, match } from 'buffs'
+import { createFs, toJSON } from 'buffs'
 
 // Create files using in-memory filesystem
 const fs = createFs({
@@ -212,6 +240,89 @@ const json = toJSON(fs)
 
 console.log(json)
 // { '/a.txt': 'a', '/b/b.txt': 'b' }
+```
+
+---
+
+### `fromJSON`
+
+Create an in-memory filesystem from a JSON dictionary. Values can be strings, Buffers, or `null` (to represent an empty directory).
+
+**Type**: `(json: DirectoryBufferJSON, rootPath?: string) => IFS`
+
+#### Example
+
+```js
+import { fromJSON } from 'buffs'
+
+const fs = fromJSON({
+  '/a.txt': 'hello',
+  '/dir': null,
+})
+
+console.log(fs.readFileSync('/a.txt', 'utf8')) // 'hello'
+console.log(fs.statSync('/dir').isDirectory()) // true
+```
+
+---
+
+### `toBSON`
+
+Serialize a filesystem to a BSON buffer, preserving file contents (including binary data) and empty directories.
+
+**Type**: `(source: IFS, rootPath?: string) => Buffer`
+
+#### Example
+
+```js
+import { createFs, toBSON } from 'buffs'
+
+const fs = createFs({
+  '/a.txt': 'hello',
+  '/empty': null,
+})
+
+const bson = toBSON(fs)
+// write `bson` to disk, a database, or send over the wire
+```
+
+---
+
+### `fromBSON`
+
+Create an in-memory filesystem from a BSON buffer produced by `toBSON`.
+
+**Type**: `(buffer: Buffer, rootPath?: string) => IFS`
+
+#### Example
+
+```js
+import { createFs, fromBSON, toBSON } from 'buffs'
+
+const original = createFs({ '/a.txt': 'hello', '/empty': null })
+const restored = fromBSON(toBSON(original))
+
+console.log(restored.readFileSync('/a.txt', 'utf8')) // 'hello'
+console.log(restored.statSync('/empty').isDirectory()) // true
+```
+
+---
+
+### `MemoryFS`
+
+Lightweight in-memory filesystem class that mirrors the subset of Node's `fs` API used by buffs.
+
+**Type**: `new MemoryFS()`
+
+#### Example
+
+```js
+import { MemoryFS } from 'buffs'
+
+const fs = new MemoryFS()
+fs.writeFileSync('/file.txt', 'data')
+
+console.log(fs.readFileSync('/file.txt', 'utf8')) // 'data'
 ```
 
 ---
