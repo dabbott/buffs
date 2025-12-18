@@ -31,6 +31,37 @@ export interface StatsLike {
 export type Callback<T> = (err: NodeJS.ErrnoException | null, result?: T) => void
 export type VoidCallback = (err: NodeJS.ErrnoException | null) => void
 
+// Callback-based async methods (like fs callback API)
+export interface IFSCallbacks {
+  lstat(targetPath: string, callback: Callback<StatsLike>): void
+  stat(targetPath: string, callback: Callback<StatsLike>): void
+  readdir(targetPath: string, callback: Callback<string[]>): void
+  readFile(targetPath: string, callback: Callback<Buffer>): void
+  readFile(targetPath: string, encoding: 'utf8', callback: Callback<string>): void
+  writeFile(targetPath: string, data: string | Buffer, callback: VoidCallback): void
+  mkdir(
+    targetPath: string,
+    options: { recursive?: boolean; mode?: number } | number | undefined,
+    callback: VoidCallback
+  ): void
+  mkdir(targetPath: string, callback: VoidCallback): void
+  chmod(targetPath: string, mode: number, callback: VoidCallback): void
+  fchmod(fd: number, mode: number, callback: VoidCallback): void
+  open(targetPath: string, flags: string | number, callback: Callback<number>): void
+  open(
+    targetPath: string,
+    flags: string | number,
+    mode: number,
+    callback: Callback<number>
+  ): void
+  rmdir(targetPath: string, callback: VoidCallback): void
+  rmdir(
+    targetPath: string,
+    options: { recursive?: boolean },
+    callback: VoidCallback
+  ): void
+}
+
 // Promise-based async methods (like fs.promises)
 export interface IFSPromises {
   lstat(path: string): Promise<StatsLike>
