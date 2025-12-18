@@ -301,6 +301,20 @@ describe('MemoryFS compatibility', () => {
     // MemoryFS doesn't support symlinks, should throw ENOSYS
     expect(() => mini.symlinkSync(`${root}/b.txt`, `${root}/link`)).toThrow()
   })
+
+  it('reset() clears all files and directories', () => {
+    const mini = createMemoryFs(initial, root) as MemoryFS
+
+    expect(mini.existsSync(`${root}/a/a.txt`)).toBe(true)
+    expect(mini.existsSync(`${root}/b.txt`)).toBe(true)
+
+    mini.reset()
+
+    expect(mini.existsSync(`${root}/a/a.txt`)).toBe(false)
+    expect(mini.existsSync(`${root}/b.txt`)).toBe(false)
+    expect(mini.existsSync(root)).toBe(false)
+    expect(mini.readdirSync('/')).toEqual([])
+  })
 })
 
 describe('MemoryFS promises API', () => {

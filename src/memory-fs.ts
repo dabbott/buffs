@@ -278,6 +278,13 @@ export class MemoryFS implements IFS, IFSCallbacks {
     this.createCallbackMethods()
   }
 
+  reset(): void {
+    this.root = this.createDirectoryNode(DEFAULT_DIR_MODE)
+    this.fds.clear()
+    this.nextFd = 3
+    this.nextIno = 1
+  }
+
   private createPromisesAPI(): IFSPromises {
     const api = {} as Record<string, unknown>
 
