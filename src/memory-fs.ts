@@ -503,6 +503,32 @@ export class MemoryFS implements IFS {
   existsSync(targetPath: string): boolean {
     return Boolean(this.maybeGetNode(targetPath))
   }
+
+  rmdirSync(targetPath: string, options?: { recursive?: boolean }): void {
+    const normalized = this.normalize(targetPath)
+    const recursive = options?.recursive === true
+
+    if (normalized === '/') {
+      if (recursive) {
+        this.root.children.clear()
+        return
+      }
+      throw createErr('EBUSY', `EBUSY: resource busy or locked, rmdir '${targetPath}'`)
+    }
+
+    const node = this.getNode(normalized)
+
+    if (node.type !== 'dir') {
+      throw createErr('ENOTDIR', `ENOTDIR: not a directory, rmdir '${targetPath}'`)
+    }
+
+    if (node.children.size > 0 && !recursive) {
+      throw createErr('ENOTEMPTY', `ENOTEMPTY: directory not empty, rmdir '${targetPath}'`)
+    }
+
+    const { parent, name } = this.resolveParent(normalized, false)
+    parent.children.delete(name)
+  }
 }
 
 export function createMemoryFs(

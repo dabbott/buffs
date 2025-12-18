@@ -41,4 +41,5 @@ export interface IFS {
   fchmodSync(fd: number, mode: number): void
   openSync(path: string, flags: string | number, mode?: number): number
   existsSync(path: string): boolean
+  rmdirSync(path: string, options?: { recursive?: boolean }): void
 }

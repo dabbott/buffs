@@ -199,4 +199,50 @@ describe('MemoryFS compatibility', () => {
       vi.useRealTimers()
     }
   })
+
+  it('rmdirSync removes empty directories', () => {
+    const { memfs, mini } = createPair()
+
+    memfs.mkdirSync(`${root}/toremove`)
+    mini.mkdirSync(`${root}/toremove`)
+
+    expect(memfs.existsSync(`${root}/toremove`)).toBe(true)
+    expect(mini.existsSync(`${root}/toremove`)).toBe(true)
+
+    memfs.rmdirSync(`${root}/toremove`)
+    mini.rmdirSync(`${root}/toremove`)
+
+    expect(memfs.existsSync(`${root}/toremove`)).toBe(false)
+    expect(mini.existsSync(`${root}/toremove`)).toBe(false)
+  })
+
+  it('rmdirSync throws ENOTEMPTY for non-empty directories', () => {
+    const { memfs, mini } = createPair()
+
+    // /root/a contains a.txt, so it should throw
+    expect(() => memfs.rmdirSync(`${root}/a`)).toThrow()
+    expect(() => mini.rmdirSync(`${root}/a`)).toThrow()
+  })
+
+  it('rmdirSync throws ENOTDIR for files', () => {
+    const { memfs, mini } = createPair()
+
+    expect(() => memfs.rmdirSync(`${root}/b.txt`)).toThrow()
+    expect(() => mini.rmdirSync(`${root}/b.txt`)).toThrow()
+  })
+
+  it('rmdirSync with recursive removes non-empty directories', () => {
+    const { memfs, mini } = createPair()
+
+    memfs.mkdirSync(`${root}/deep/nested/dir`, { recursive: true })
+    mini.mkdirSync(`${root}/deep/nested/dir`, { recursive: true })
+    memfs.writeFileSync(`${root}/deep/nested/file.txt`, 'data')
+    mini.writeFileSync(`${root}/deep/nested/file.txt`, 'data')
+
+    memfs.rmdirSync(`${root}/deep`, { recursive: true })
+    mini.rmdirSync(`${root}/deep`, { recursive: true })
+
+    expect(memfs.existsSync(`${root}/deep`)).toBe(false)
+    expect(mini.existsSync(`${root}/deep`)).toBe(false)
+  })
 })
