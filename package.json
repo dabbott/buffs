@@ -13,6 +13,11 @@
       "types": "./lib/index.d.ts",
       "import": "./lib/index.mjs",
       "require": "./lib/index.cjs"
+    },
+    "./memory-fs": {
+      "types": "./lib/memory-fs.d.ts",
+      "import": "./lib/memory-fs.mjs",
+      "require": "./lib/memory-fs.cjs"
     }
   },
   "scripts": {
