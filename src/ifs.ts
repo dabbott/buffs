@@ -62,6 +62,7 @@ export interface IFSCallbacks {
   ): void
   unlink(targetPath: string, callback: VoidCallback): void
   readlink(targetPath: string, callback: Callback<string>): void
+  symlink(target: string, path: string, callback: VoidCallback): void
 }
 
 // Promise-based async methods (like fs.promises)
@@ -77,6 +78,7 @@ export interface IFSPromises {
   rmdir(path: string, options?: { recursive?: boolean }): Promise<void>
   unlink(path: string): Promise<void>
   readlink(path: string): Promise<string>
+  symlink(target: string, path: string): Promise<void>
 }
 
 // Minimal fs-like interface used by this library
@@ -97,4 +99,5 @@ export interface IFS {
   rmdirSync(path: string, options?: { recursive?: boolean }): void
   unlinkSync(path: string): void
   readlinkSync(path: string): string
+  symlinkSync(target: string, path: string): void
 }

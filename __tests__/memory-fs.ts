@@ -294,6 +294,13 @@ describe('MemoryFS compatibility', () => {
     expect(() => memfs.readlinkSync(`${root}/nonexistent`)).toThrow()
     expect(() => mini.readlinkSync(`${root}/nonexistent`)).toThrow()
   })
+
+  it('symlinkSync throws (not supported)', () => {
+    const { mini } = createPair()
+
+    // MemoryFS doesn't support symlinks, should throw ENOSYS
+    expect(() => mini.symlinkSync(`${root}/b.txt`, `${root}/link`)).toThrow()
+  })
 })
 
 describe('MemoryFS promises API', () => {
