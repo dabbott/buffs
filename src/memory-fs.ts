@@ -1,5 +1,5 @@
 import path from 'path'
-import type { IFS, StatsLike } from './ifs'
+import type { Callback, IFS, IFSPromises, StatsLike, VoidCallback } from './ifs'
 
 const S_IFDIR = 0o040000
 const S_IFREG = 0o100000
@@ -186,30 +186,84 @@ function parseFlags(flags: string | number): ParsedFlags {
 
   switch (flags) {
     case 'r':
-      return { read: true, write: false, append: false, truncate: false, create: false }
+      return {
+        read: true,
+        write: false,
+        append: false,
+        truncate: false,
+        create: false,
+      }
     case 'r+':
     case 'rs+':
-      return { read: true, write: true, append: false, truncate: false, create: false }
+      return {
+        read: true,
+        write: true,
+        append: false,
+        truncate: false,
+        create: false,
+      }
     case 'w':
-      return { read: false, write: true, append: false, truncate: true, create: true }
+      return {
+        read: false,
+        write: true,
+        append: false,
+        truncate: true,
+        create: true,
+      }
     case 'wx':
     case 'xw':
-      return { read: false, write: true, append: false, truncate: true, create: true }
+      return {
+        read: false,
+        write: true,
+        append: false,
+        truncate: true,
+        create: true,
+      }
     case 'w+':
     case 'wx+':
     case 'xw+':
-      return { read: true, write: true, append: false, truncate: true, create: true }
+      return {
+        read: true,
+        write: true,
+        append: false,
+        truncate: true,
+        create: true,
+      }
     case 'a':
-      return { read: false, write: true, append: true, truncate: false, create: true }
+      return {
+        read: false,
+        write: true,
+        append: true,
+        truncate: false,
+        create: true,
+      }
     case 'ax':
     case 'xa':
-      return { read: false, write: true, append: true, truncate: false, create: true }
+      return {
+        read: false,
+        write: true,
+        append: true,
+        truncate: false,
+        create: true,
+      }
     case 'a+':
     case 'ax+':
     case 'xa+':
-      return { read: true, write: true, append: true, truncate: false, create: true }
+      return {
+        read: true,
+        write: true,
+        append: true,
+        truncate: false,
+        create: true,
+      }
     default:
-      return { read: true, write: false, append: false, truncate: false, create: false }
+      return {
+        read: true,
+        write: false,
+        append: false,
+        truncate: false,
+        create: false,
+      }
   }
 }
 
@@ -217,6 +271,41 @@ function createErr(code: string, message: string): NodeJS.ErrnoException {
   const error = new Error(message) as NodeJS.ErrnoException
   error.code = code
   return error
+}
+
+// Maps async method names to their sync counterparts
+const promiseMethodMap: Record<keyof IFSPromises, keyof IFS> = {
+  lstat: 'lstatSync',
+  stat: 'statSync',
+  readdir: 'readdirSync',
+  readFile: 'readFileSync',
+  writeFile: 'writeFileSync',
+  mkdir: 'mkdirSync',
+  chmod: 'chmodSync',
+  rmdir: 'rmdirSync',
+}
+
+function promisify<T extends (...args: never[]) => unknown>(
+  fn: T
+): (...args: Parameters<T>) => Promise<ReturnType<T>> {
+  return (...args: Parameters<T>) =>
+    new Promise((resolve, reject) => {
+      try {
+        resolve(fn(...args) as ReturnType<T>)
+      } catch (e) {
+        reject(e)
+      }
+    })
+}
+
+// Maps callback method names to their sync counterparts (simple cases only)
+const callbackMethodMap: Record<string, keyof IFS> = {
+  lstat: 'lstatSync',
+  stat: 'statSync',
+  readdir: 'readdirSync',
+  writeFile: 'writeFileSync',
+  chmod: 'chmodSync',
+  fchmod: 'fchmodSync',
 }
 
 export class MemoryFS implements IFS {
@@ -227,10 +316,48 @@ export class MemoryFS implements IFS {
   private uid: number
   private gid: number
 
+  public readonly promises: IFSPromises
+
   constructor() {
     this.uid = typeof process.getuid === 'function' ? process.getuid() : 0
     this.gid = typeof process.getgid === 'function' ? process.getgid() : 0
     this.root = this.createDirectoryNode(DEFAULT_DIR_MODE)
+    this.promises = this.createPromisesAPI()
+    this.createCallbackMethods()
+  }
+
+  private createPromisesAPI(): IFSPromises {
+    const api = {} as Record<string, unknown>
+
+    for (const [asyncName, syncName] of Object.entries(promiseMethodMap)) {
+      const syncMethod = this[syncName as keyof this]
+      if (typeof syncMethod === 'function') {
+        api[asyncName] = promisify(syncMethod.bind(this))
+      }
+    }
+
+    return api as unknown as IFSPromises
+  }
+
+  private createCallbackMethods(): void {
+    for (const [callbackName, syncName] of Object.entries(callbackMethodMap)) {
+      const syncMethod = this[syncName as keyof this]
+      if (typeof syncMethod === 'function') {
+        ;(this as unknown as Record<string, unknown>)[callbackName] = (
+          ...args: unknown[]
+        ) => {
+          const callback = args.pop() as (
+            err: NodeJS.ErrnoException | null,
+            result?: unknown
+          ) => void
+          try {
+            callback(null, (syncMethod as Function).apply(this, args))
+          } catch (e) {
+            callback(e as NodeJS.ErrnoException)
+          }
+        }
+      }
+    }
   }
 
   private normalize(inputPath: string): string {
@@ -274,13 +401,19 @@ export class MemoryFS implements IFS {
 
     for (const part of parts) {
       if (current.type !== 'dir') {
-        throw createErr('ENOENT', `ENOENT: no such file or directory, lstat '${targetPath}'`)
+        throw createErr(
+          'ENOENT',
+          `ENOENT: no such file or directory, lstat '${targetPath}'`
+        )
       }
 
       const next = current.children.get(part)
 
       if (!next) {
-        throw createErr('ENOENT', `ENOENT: no such file or directory, lstat '${targetPath}'`)
+        throw createErr(
+          'ENOENT',
+          `ENOENT: no such file or directory, lstat '${targetPath}'`
+        )
       }
 
       current = next
@@ -301,13 +434,19 @@ export class MemoryFS implements IFS {
     const node = this.getNode(targetPath)
 
     if (node.type !== 'dir') {
-      throw createErr('ENOTDIR', `ENOTDIR: not a directory, scandir '${targetPath}'`)
+      throw createErr(
+        'ENOTDIR',
+        `ENOTDIR: not a directory, scandir '${targetPath}'`
+      )
     }
 
     return node
   }
 
-  private resolveParent(targetPath: string, recursive: boolean): { parent: DirectoryNode; name: string } {
+  private resolveParent(
+    targetPath: string,
+    recursive: boolean
+  ): { parent: DirectoryNode; name: string } {
     const normalized = this.normalize(targetPath)
 
     if (normalized === '/') {
@@ -324,7 +463,10 @@ export class MemoryFS implements IFS {
 
       if (!next) {
         if (!recursive) {
-          throw createErr('ENOENT', `ENOENT: no such file or directory, mkdir '${targetPath}'`)
+          throw createErr(
+            'ENOENT',
+            `ENOENT: no such file or directory, mkdir '${targetPath}'`
+          )
         }
 
         const newDir = this.createDirectoryNode()
@@ -332,7 +474,10 @@ export class MemoryFS implements IFS {
         current = newDir
       } else {
         if (next.type !== 'dir') {
-          throw createErr('ENOTDIR', `ENOTDIR: not a directory, mkdir '${targetPath}'`)
+          throw createErr(
+            'ENOTDIR',
+            `ENOTDIR: not a directory, mkdir '${targetPath}'`
+          )
         }
 
         current = next
@@ -347,7 +492,8 @@ export class MemoryFS implements IFS {
     const nlink =
       node.type === 'dir'
         ? 2 +
-          [...node.children.values()].filter((child) => child.type === 'dir').length
+          [...node.children.values()].filter((child) => child.type === 'dir')
+            .length
         : 1
 
     return new MemoryStats(node.type, node.mode, size, node.times, {
@@ -364,6 +510,7 @@ export class MemoryFS implements IFS {
     node.times.ctime = now
   }
 
+  // Sync methods
   lstatSync(targetPath: string): StatsLike {
     return this.createStats(this.getNode(targetPath))
   }
@@ -383,7 +530,10 @@ export class MemoryFS implements IFS {
     const node = this.getNode(targetPath)
 
     if (node.type !== 'file') {
-      throw createErr('EISDIR', `EISDIR: illegal operation on a directory, read '${targetPath}'`)
+      throw createErr(
+        'EISDIR',
+        `EISDIR: illegal operation on a directory, read '${targetPath}'`
+      )
     }
 
     const data = Buffer.from(node.data)
@@ -394,12 +544,17 @@ export class MemoryFS implements IFS {
   writeFileSync(targetPath: string, data: string | Buffer): void {
     const normalized = this.normalize(targetPath)
     const { parent, name } = this.resolveParent(normalized, false)
-    const buffer = Buffer.isBuffer(data) ? Buffer.from(data) : Buffer.from(String(data))
+    const buffer = Buffer.isBuffer(data)
+      ? Buffer.from(data)
+      : Buffer.from(String(data))
 
     const existing = parent.children.get(name)
 
     if (existing && existing.type === 'dir') {
-      throw createErr('EISDIR', `EISDIR: illegal operation on a directory, open '${targetPath}'`)
+      throw createErr(
+        'EISDIR',
+        `EISDIR: illegal operation on a directory, open '${targetPath}'`
+      )
     }
 
     if (existing && existing.type === 'file') {
@@ -416,7 +571,9 @@ export class MemoryFS implements IFS {
     options?: { recursive?: boolean; mode?: number } | number
   ): void {
     const opts =
-      typeof options === 'number' ? { mode: options, recursive: false } : options ?? {}
+      typeof options === 'number'
+        ? { mode: options, recursive: false }
+        : (options ?? {})
     const recursive = opts.recursive === true
     const mode = applyMode('dir', opts.mode ?? DEFAULT_DIR_PERMISSIONS)
     const normalized = this.normalize(targetPath)
@@ -434,7 +591,10 @@ export class MemoryFS implements IFS {
 
       if (!next) {
         if (!recursive && !last) {
-          throw createErr('ENOENT', `ENOENT: no such file or directory, mkdir '${targetPath}'`)
+          throw createErr(
+            'ENOENT',
+            `ENOENT: no such file or directory, mkdir '${targetPath}'`
+          )
         }
 
         const newDir = this.createDirectoryNode(last ? mode : DEFAULT_DIR_MODE)
@@ -442,13 +602,19 @@ export class MemoryFS implements IFS {
         current = newDir
       } else {
         if (next.type !== 'dir') {
-          throw createErr('EEXIST', `EEXIST: file already exists, mkdir '${targetPath}'`)
+          throw createErr(
+            'EEXIST',
+            `EEXIST: file already exists, mkdir '${targetPath}'`
+          )
         }
 
         current = next
 
         if (last && !recursive) {
-          throw createErr('EEXIST', `EEXIST: file already exists, mkdir '${targetPath}'`)
+          throw createErr(
+            'EEXIST',
+            `EEXIST: file already exists, mkdir '${targetPath}'`
+          )
         }
       }
     })
@@ -478,16 +644,28 @@ export class MemoryFS implements IFS {
 
     if (!node) {
       if (!parsed.create && !parsed.write && !parsed.append) {
-        throw createErr('ENOENT', `ENOENT: no such file or directory, open '${targetPath}'`)
+        throw createErr(
+          'ENOENT',
+          `ENOENT: no such file or directory, open '${targetPath}'`
+        )
       }
 
       const { parent, name } = this.resolveParent(normalized, false)
-      node = this.createFileNode(Buffer.alloc(0), mode ?? DEFAULT_FILE_PERMISSIONS)
+      node = this.createFileNode(
+        Buffer.alloc(0),
+        mode ?? DEFAULT_FILE_PERMISSIONS
+      )
       parent.children.set(name, node)
     }
 
-    if (node.type === 'dir' && (parsed.write || parsed.append || parsed.truncate)) {
-      throw createErr('EISDIR', `EISDIR: illegal operation on a directory, open '${targetPath}'`)
+    if (
+      node.type === 'dir' &&
+      (parsed.write || parsed.append || parsed.truncate)
+    ) {
+      throw createErr(
+        'EISDIR',
+        `EISDIR: illegal operation on a directory, open '${targetPath}'`
+      )
     }
 
     if (node.type === 'file' && parsed.truncate && !parsed.append) {
@@ -513,21 +691,162 @@ export class MemoryFS implements IFS {
         this.root.children.clear()
         return
       }
-      throw createErr('EBUSY', `EBUSY: resource busy or locked, rmdir '${targetPath}'`)
+      throw createErr(
+        'EBUSY',
+        `EBUSY: resource busy or locked, rmdir '${targetPath}'`
+      )
     }
 
     const node = this.getNode(normalized)
 
     if (node.type !== 'dir') {
-      throw createErr('ENOTDIR', `ENOTDIR: not a directory, rmdir '${targetPath}'`)
+      throw createErr(
+        'ENOTDIR',
+        `ENOTDIR: not a directory, rmdir '${targetPath}'`
+      )
     }
 
     if (node.children.size > 0 && !recursive) {
-      throw createErr('ENOTEMPTY', `ENOTEMPTY: directory not empty, rmdir '${targetPath}'`)
+      throw createErr(
+        'ENOTEMPTY',
+        `ENOTEMPTY: directory not empty, rmdir '${targetPath}'`
+      )
     }
 
     const { parent, name } = this.resolveParent(normalized, false)
     parent.children.delete(name)
+  }
+
+  // Callback-based async methods (simple ones generated by createCallbackMethods)
+  // Type declarations for dynamically created methods
+  lstat!: (targetPath: string, callback: Callback<StatsLike>) => void
+  stat!: (targetPath: string, callback: Callback<StatsLike>) => void
+  readdir!: (targetPath: string, callback: Callback<string[]>) => void
+  writeFile!: (
+    targetPath: string,
+    data: string | Buffer,
+    callback: VoidCallback
+  ) => void
+  chmod!: (targetPath: string, mode: number, callback: VoidCallback) => void
+  fchmod!: (fd: number, mode: number, callback: VoidCallback) => void
+
+  // Complex overloaded callback methods (must be defined manually)
+  readFile(targetPath: string, callback: Callback<Buffer>): void
+  readFile(
+    targetPath: string,
+    encoding: 'utf8',
+    callback: Callback<string>
+  ): void
+  readFile(
+    targetPath: string,
+    encodingOrCallback: 'utf8' | Callback<Buffer>,
+    callback?: Callback<string>
+  ): void {
+    try {
+      if (typeof encodingOrCallback === 'function') {
+        encodingOrCallback(null, this.readFileSync(targetPath))
+      } else {
+        callback!(null, this.readFileSync(targetPath, encodingOrCallback))
+      }
+    } catch (e) {
+      if (typeof encodingOrCallback === 'function') {
+        encodingOrCallback(e as NodeJS.ErrnoException)
+      } else {
+        callback!(e as NodeJS.ErrnoException)
+      }
+    }
+  }
+
+  mkdir(
+    targetPath: string,
+    options: { recursive?: boolean; mode?: number } | number | undefined,
+    callback: VoidCallback
+  ): void
+  mkdir(targetPath: string, callback: VoidCallback): void
+  mkdir(
+    targetPath: string,
+    optionsOrCallback:
+      | { recursive?: boolean; mode?: number }
+      | number
+      | undefined
+      | VoidCallback,
+    callback?: VoidCallback
+  ): void {
+    try {
+      if (typeof optionsOrCallback === 'function') {
+        this.mkdirSync(targetPath)
+        optionsOrCallback(null)
+      } else {
+        this.mkdirSync(targetPath, optionsOrCallback)
+        callback!(null)
+      }
+    } catch (e) {
+      if (typeof optionsOrCallback === 'function') {
+        optionsOrCallback(e as NodeJS.ErrnoException)
+      } else {
+        callback!(e as NodeJS.ErrnoException)
+      }
+    }
+  }
+
+  open(
+    targetPath: string,
+    flags: string | number,
+    callback: Callback<number>
+  ): void
+  open(
+    targetPath: string,
+    flags: string | number,
+    mode: number,
+    callback: Callback<number>
+  ): void
+  open(
+    targetPath: string,
+    flags: string | number,
+    modeOrCallback: number | Callback<number>,
+    callback?: Callback<number>
+  ): void {
+    try {
+      if (typeof modeOrCallback === 'function') {
+        modeOrCallback(null, this.openSync(targetPath, flags))
+      } else {
+        callback!(null, this.openSync(targetPath, flags, modeOrCallback))
+      }
+    } catch (e) {
+      if (typeof modeOrCallback === 'function') {
+        modeOrCallback(e as NodeJS.ErrnoException)
+      } else {
+        callback!(e as NodeJS.ErrnoException)
+      }
+    }
+  }
+
+  rmdir(targetPath: string, callback: VoidCallback): void
+  rmdir(
+    targetPath: string,
+    options: { recursive?: boolean },
+    callback: VoidCallback
+  ): void
+  rmdir(
+    targetPath: string,
+    optionsOrCallback: { recursive?: boolean } | VoidCallback,
+    callback?: VoidCallback
+  ): void {
+    try {
+      if (typeof optionsOrCallback === 'function') {
+        this.rmdirSync(targetPath)
+        optionsOrCallback(null)
+      } else {
+        this.rmdirSync(targetPath, optionsOrCallback)
+        callback!(null)
+      }
+    } catch (e) {
+      if (typeof optionsOrCallback === 'function') {
+        optionsOrCallback(e as NodeJS.ErrnoException)
+      } else {
+        callback!(e as NodeJS.ErrnoException)
+      }
+    }
   }
 }
 

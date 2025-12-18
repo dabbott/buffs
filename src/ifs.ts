@@ -27,8 +27,26 @@ export interface StatsLike {
   toJSON?(): unknown
 }
 
+// Callback type for async operations
+export type Callback<T> = (err: NodeJS.ErrnoException | null, result?: T) => void
+export type VoidCallback = (err: NodeJS.ErrnoException | null) => void
+
+// Promise-based async methods (like fs.promises)
+export interface IFSPromises {
+  lstat(path: string): Promise<StatsLike>
+  stat(path: string): Promise<StatsLike>
+  readdir(path: string): Promise<string[]>
+  readFile(path: string): Promise<Buffer>
+  readFile(path: string, encoding: 'utf8'): Promise<string>
+  writeFile(path: string, data: string | Buffer): Promise<void>
+  mkdir(path: string, options?: { recursive?: boolean; mode?: number } | number): Promise<void>
+  chmod(path: string, mode: number): Promise<void>
+  rmdir(path: string, options?: { recursive?: boolean }): Promise<void>
+}
+
 // Minimal fs-like interface used by this library
 // Compatible with Node's fs and memfs implementations
+// Only includes sync methods to ensure compatibility
 export interface IFS {
   lstatSync(path: string): StatsLike
   statSync(path: string): StatsLike
