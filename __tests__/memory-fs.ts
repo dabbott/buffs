@@ -315,6 +315,40 @@ describe('MemoryFS compatibility', () => {
     expect(mini.existsSync(root)).toBe(false)
     expect(mini.readdirSync('/')).toEqual([])
   })
+
+  it('writeFileSync handles Uint8Array correctly', () => {
+    const mini = new MemoryFS()
+    const data = new Uint8Array([80, 65, 67, 75]) // "PACK"
+
+    mini.writeFileSync('/test.bin', data)
+
+    const result = mini.readFileSync('/test.bin')
+    expect(Buffer.isBuffer(result)).toBe(true)
+    expect(result.toString('utf8')).toBe('PACK')
+    expect(result.length).toBe(4)
+  })
+
+  it('writeFileSync does not stringify Uint8Array', () => {
+    const mini = new MemoryFS()
+    const data = new Uint8Array([80, 65, 67, 75])
+
+    mini.writeFileSync('/test.bin', data)
+
+    const result = mini.readFileSync('/test.bin', 'utf8')
+    // Should be "PACK", not "80,65,67,75"
+    expect(result).toBe('PACK')
+    expect(result).not.toContain(',')
+  })
+
+  it('promises.writeFile handles Uint8Array correctly', async () => {
+    const mini = new MemoryFS()
+    const data = new Uint8Array([72, 69, 76, 76, 79]) // "HELLO"
+
+    await mini.promises.writeFile('/test.bin', data)
+
+    const result = mini.readFileSync('/test.bin', 'utf8')
+    expect(result).toBe('HELLO')
+  })
 })
 
 describe('MemoryFS promises API', () => {
