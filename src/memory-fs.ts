@@ -15,7 +15,10 @@ const O_TRUNC = 0o1000
 const O_APPEND = 0o2000
 
 export type DirectoryJSON = Record<string, string | null>
-export type DirectoryBufferJSON = Record<string, string | Buffer | Uint8Array | null>
+export type DirectoryBufferJSON = Record<
+  string,
+  string | Buffer | Uint8Array | null
+>
 
 type NodeType = 'file' | 'dir'
 
@@ -513,9 +516,7 @@ export class MemoryFS implements IFS, IFSCallbacks {
     const data = Buffer.from(node.data)
 
     const encoding =
-      typeof options === 'string'
-        ? options
-        : options?.encoding ?? null
+      typeof options === 'string' ? options : (options?.encoding ?? null)
 
     return encoding ? data.toString(encoding) : data
   }

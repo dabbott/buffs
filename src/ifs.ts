@@ -28,7 +28,10 @@ export interface StatsLike {
 }
 
 // Callback type for async operations
-export type Callback<T> = (err: NodeJS.ErrnoException | null, result?: T) => void
+export type Callback<T> = (
+  err: NodeJS.ErrnoException | null,
+  result?: T
+) => void
 export type VoidCallback = (err: NodeJS.ErrnoException | null) => void
 
 // Callback-based async methods (like fs callback API)
@@ -37,8 +40,16 @@ export interface IFSCallbacks {
   stat(targetPath: string, callback: Callback<StatsLike>): void
   readdir(targetPath: string, callback: Callback<string[]>): void
   readFile(targetPath: string, callback: Callback<Buffer>): void
-  readFile(targetPath: string, encoding: 'utf8', callback: Callback<string>): void
-  writeFile(targetPath: string, data: string | Buffer | Uint8Array, callback: VoidCallback): void
+  readFile(
+    targetPath: string,
+    encoding: 'utf8',
+    callback: Callback<string>
+  ): void
+  writeFile(
+    targetPath: string,
+    data: string | Buffer | Uint8Array,
+    callback: VoidCallback
+  ): void
   mkdir(
     targetPath: string,
     options: { recursive?: boolean; mode?: number } | number | undefined,
@@ -47,7 +58,11 @@ export interface IFSCallbacks {
   mkdir(targetPath: string, callback: VoidCallback): void
   chmod(targetPath: string, mode: number, callback: VoidCallback): void
   fchmod(fd: number, mode: number, callback: VoidCallback): void
-  open(targetPath: string, flags: string | number, callback: Callback<number>): void
+  open(
+    targetPath: string,
+    flags: string | number,
+    callback: Callback<number>
+  ): void
   open(
     targetPath: string,
     flags: string | number,
@@ -73,7 +88,10 @@ export interface IFSPromises {
   readFile(path: string): Promise<Buffer>
   readFile(path: string, encoding: 'utf8'): Promise<string>
   writeFile(path: string, data: string | Buffer | Uint8Array): Promise<void>
-  mkdir(path: string, options?: { recursive?: boolean; mode?: number } | number): Promise<void>
+  mkdir(
+    path: string,
+    options?: { recursive?: boolean; mode?: number } | number
+  ): Promise<void>
   chmod(path: string, mode: number): Promise<void>
   rmdir(path: string, options?: { recursive?: boolean }): Promise<void>
   unlink(path: string): Promise<void>
@@ -83,7 +101,7 @@ export interface IFSPromises {
 
 // Minimal fs-like interface used by this library
 // Compatible with Node's fs and memfs implementations
-// Only includes sync methods to ensure compatibility
+// Only includes sync methods in interface to ensure compatibility
 export interface IFS {
   lstatSync(path: string): StatsLike
   statSync(path: string): StatsLike
@@ -95,7 +113,10 @@ export interface IFS {
     options?: BufferEncoding | { encoding?: BufferEncoding | null } | null
   ): Buffer | string
   writeFileSync(path: string, data: string | Buffer | Uint8Array): void
-  mkdirSync(path: string, options?: { recursive?: boolean; mode?: number } | number): void
+  mkdirSync(
+    path: string,
+    options?: { recursive?: boolean; mode?: number } | number
+  ): void
   chmodSync(path: string, mode: number): void
   fchmodSync(fd: number, mode: number): void
   openSync(path: string, flags: string | number, mode?: number): number
