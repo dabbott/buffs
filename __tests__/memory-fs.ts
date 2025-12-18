@@ -275,6 +275,25 @@ describe('MemoryFS compatibility', () => {
     expect(() => memfs.unlinkSync(`${root}/nonexistent`)).toThrow()
     expect(() => mini.unlinkSync(`${root}/nonexistent`)).toThrow()
   })
+
+  it('readlinkSync throws EINVAL for non-symlinks', () => {
+    const { memfs, mini } = createPair()
+
+    // Both should throw for regular files
+    expect(() => memfs.readlinkSync(`${root}/b.txt`)).toThrow()
+    expect(() => mini.readlinkSync(`${root}/b.txt`)).toThrow()
+
+    // Both should throw for directories
+    expect(() => memfs.readlinkSync(`${root}/a`)).toThrow()
+    expect(() => mini.readlinkSync(`${root}/a`)).toThrow()
+  })
+
+  it('readlinkSync throws ENOENT for missing paths', () => {
+    const { memfs, mini } = createPair()
+
+    expect(() => memfs.readlinkSync(`${root}/nonexistent`)).toThrow()
+    expect(() => mini.readlinkSync(`${root}/nonexistent`)).toThrow()
+  })
 })
 
 describe('MemoryFS promises API', () => {
