@@ -245,6 +245,36 @@ describe('MemoryFS compatibility', () => {
     expect(memfs.existsSync(`${root}/deep`)).toBe(false)
     expect(mini.existsSync(`${root}/deep`)).toBe(false)
   })
+
+  it('unlinkSync removes files', () => {
+    const { memfs, mini } = createPair()
+
+    memfs.writeFileSync(`${root}/toremove.txt`, 'data')
+    mini.writeFileSync(`${root}/toremove.txt`, 'data')
+
+    expect(memfs.existsSync(`${root}/toremove.txt`)).toBe(true)
+    expect(mini.existsSync(`${root}/toremove.txt`)).toBe(true)
+
+    memfs.unlinkSync(`${root}/toremove.txt`)
+    mini.unlinkSync(`${root}/toremove.txt`)
+
+    expect(memfs.existsSync(`${root}/toremove.txt`)).toBe(false)
+    expect(mini.existsSync(`${root}/toremove.txt`)).toBe(false)
+  })
+
+  it('unlinkSync throws EISDIR for directories', () => {
+    const { memfs, mini } = createPair()
+
+    expect(() => memfs.unlinkSync(`${root}/a`)).toThrow()
+    expect(() => mini.unlinkSync(`${root}/a`)).toThrow()
+  })
+
+  it('unlinkSync throws ENOENT for missing files', () => {
+    const { memfs, mini } = createPair()
+
+    expect(() => memfs.unlinkSync(`${root}/nonexistent`)).toThrow()
+    expect(() => mini.unlinkSync(`${root}/nonexistent`)).toThrow()
+  })
 })
 
 describe('MemoryFS promises API', () => {

@@ -60,6 +60,7 @@ export interface IFSCallbacks {
     options: { recursive?: boolean },
     callback: VoidCallback
   ): void
+  unlink(targetPath: string, callback: VoidCallback): void
 }
 
 // Promise-based async methods (like fs.promises)
@@ -73,6 +74,7 @@ export interface IFSPromises {
   mkdir(path: string, options?: { recursive?: boolean; mode?: number } | number): Promise<void>
   chmod(path: string, mode: number): Promise<void>
   rmdir(path: string, options?: { recursive?: boolean }): Promise<void>
+  unlink(path: string): Promise<void>
 }
 
 // Minimal fs-like interface used by this library
@@ -91,4 +93,5 @@ export interface IFS {
   openSync(path: string, flags: string | number, mode?: number): number
   existsSync(path: string): boolean
   rmdirSync(path: string, options?: { recursive?: boolean }): void
+  unlinkSync(path: string): void
 }
