@@ -38,7 +38,7 @@ export interface IFSCallbacks {
   readdir(targetPath: string, callback: Callback<string[]>): void
   readFile(targetPath: string, callback: Callback<Buffer>): void
   readFile(targetPath: string, encoding: 'utf8', callback: Callback<string>): void
-  writeFile(targetPath: string, data: string | Buffer, callback: VoidCallback): void
+  writeFile(targetPath: string, data: string | Buffer | Uint8Array, callback: VoidCallback): void
   mkdir(
     targetPath: string,
     options: { recursive?: boolean; mode?: number } | number | undefined,
@@ -72,7 +72,7 @@ export interface IFSPromises {
   readdir(path: string): Promise<string[]>
   readFile(path: string): Promise<Buffer>
   readFile(path: string, encoding: 'utf8'): Promise<string>
-  writeFile(path: string, data: string | Buffer): Promise<void>
+  writeFile(path: string, data: string | Buffer | Uint8Array): Promise<void>
   mkdir(path: string, options?: { recursive?: boolean; mode?: number } | number): Promise<void>
   chmod(path: string, mode: number): Promise<void>
   rmdir(path: string, options?: { recursive?: boolean }): Promise<void>
@@ -94,7 +94,7 @@ export interface IFS {
     path: string,
     options?: BufferEncoding | { encoding?: BufferEncoding | null } | null
   ): Buffer | string
-  writeFileSync(path: string, data: string | Buffer): void
+  writeFileSync(path: string, data: string | Buffer | Uint8Array): void
   mkdirSync(path: string, options?: { recursive?: boolean; mode?: number } | number): void
   chmodSync(path: string, mode: number): void
   fchmodSync(fd: number, mode: number): void

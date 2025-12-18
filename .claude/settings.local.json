@@ -3,7 +3,9 @@
     "allow": [
       "Bash(pnpm test:*)",
       "Bash(pnpm typecheck:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(bun test:*)",
+      "Bash(pnpm build:*)"
     ]
   }
 }
