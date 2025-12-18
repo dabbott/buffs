@@ -90,6 +90,10 @@ export interface IFS {
   readdirSync(path: string): string[]
   readFileSync(path: string): Buffer
   readFileSync(path: string, encoding: 'utf8'): string
+  readFileSync(
+    path: string,
+    options?: BufferEncoding | { encoding?: BufferEncoding | null } | null
+  ): Buffer | string
   writeFileSync(path: string, data: string | Buffer): void
   mkdirSync(path: string, options?: { recursive?: boolean; mode?: number } | number): void
   chmodSync(path: string, mode: number): void

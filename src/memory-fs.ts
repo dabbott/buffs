@@ -497,7 +497,10 @@ export class MemoryFS implements IFS, IFSCallbacks {
 
   readFileSync(targetPath: string): Buffer
   readFileSync(targetPath: string, encoding: 'utf8'): string
-  readFileSync(targetPath: string, encoding?: BufferEncoding): Buffer | string {
+  readFileSync(
+    targetPath: string,
+    options?: BufferEncoding | { encoding?: BufferEncoding | null } | null
+  ): Buffer | string {
     const node = this.getNode(targetPath)
 
     if (node.type !== 'file') {
@@ -508,6 +511,11 @@ export class MemoryFS implements IFS, IFSCallbacks {
     }
 
     const data = Buffer.from(node.data)
+
+    const encoding =
+      typeof options === 'string'
+        ? options
+        : options?.encoding ?? null
 
     return encoding ? data.toString(encoding) : data
   }

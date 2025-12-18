@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(pnpm test:*)",
-      "Bash(pnpm typecheck:*)"
+      "Bash(pnpm typecheck:*)",
+      "Bash(node -e:*)"
     ]
   }
 }
