@@ -1,12 +1,5 @@
 import path from 'path'
-import type {
-  Callback,
-  IFS,
-  IFSCallbacks,
-  IFSPromises,
-  StatsLike,
-  VoidCallback,
-} from './ifs'
+import type { IFS, IFSCallbacks, IFSPromises, StatsLike } from './ifs'
 
 const S_IFDIR = 0o040000
 const S_IFREG = 0o100000
@@ -175,102 +168,57 @@ type ParsedFlags = {
   create: boolean
 }
 
-function parseNumberFlags(flags: number): ParsedFlags {
-  const accessMode = flags & 3
-  const read = accessMode === O_RDONLY || accessMode === O_RDWR
-  const write = accessMode === O_WRONLY || accessMode === O_RDWR
-  const append = Boolean(flags & O_APPEND)
-  const truncate = Boolean(flags & O_TRUNC)
-  const create = Boolean(flags & O_CREAT) || append || truncate
-
-  return { read, write, append, truncate, create }
-}
-
 function parseFlags(flags: string | number): ParsedFlags {
   if (typeof flags === 'number') {
-    return parseNumberFlags(flags)
+    const accessMode = flags & 3
+    const read = accessMode === O_RDONLY || accessMode === O_RDWR
+    const write = accessMode === O_WRONLY || accessMode === O_RDWR
+    const append = Boolean(flags & O_APPEND)
+    const truncate = Boolean(flags & O_TRUNC)
+    const create = Boolean(flags & O_CREAT) || append || truncate
+    return { read, write, append, truncate, create }
   }
 
-  switch (flags) {
-    case 'r':
-      return {
-        read: true,
-        write: false,
-        append: false,
-        truncate: false,
-        create: false,
-      }
-    case 'r+':
-    case 'rs+':
-      return {
-        read: true,
-        write: true,
-        append: false,
-        truncate: false,
-        create: false,
-      }
-    case 'w':
-      return {
-        read: false,
-        write: true,
-        append: false,
-        truncate: true,
-        create: true,
-      }
-    case 'wx':
-    case 'xw':
-      return {
-        read: false,
-        write: true,
-        append: false,
-        truncate: true,
-        create: true,
-      }
-    case 'w+':
-    case 'wx+':
-    case 'xw+':
-      return {
-        read: true,
-        write: true,
-        append: false,
-        truncate: true,
-        create: true,
-      }
-    case 'a':
-      return {
-        read: false,
-        write: true,
-        append: true,
-        truncate: false,
-        create: true,
-      }
-    case 'ax':
-    case 'xa':
-      return {
-        read: false,
-        write: true,
-        append: true,
-        truncate: false,
-        create: true,
-      }
-    case 'a+':
-    case 'ax+':
-    case 'xa+':
-      return {
-        read: true,
-        write: true,
-        append: true,
-        truncate: false,
-        create: true,
-      }
-    default:
-      return {
-        read: true,
-        write: false,
-        append: false,
-        truncate: false,
-        create: false,
-      }
+  // Normalize: remove 's' (sync) and 'x' (exclusive) modifiers
+  const normalized = flags.replace(/[sx]/g, '')
+  const hasPlus = normalized.includes('+')
+  const base = normalized.replace('+', '')
+
+  if (base === 'r') {
+    return {
+      read: true,
+      write: hasPlus,
+      append: false,
+      truncate: false,
+      create: false,
+    }
+  }
+  if (base === 'w') {
+    return {
+      read: hasPlus,
+      write: true,
+      append: false,
+      truncate: true,
+      create: true,
+    }
+  }
+  if (base === 'a') {
+    return {
+      read: hasPlus,
+      write: true,
+      append: true,
+      truncate: false,
+      create: true,
+    }
+  }
+
+  // Default: read-only
+  return {
+    read: true,
+    write: false,
+    append: false,
+    truncate: false,
+    create: false,
   }
 }
 
@@ -278,18 +226,6 @@ function createErr(code: string, message: string): NodeJS.ErrnoException {
   const error = new Error(message) as NodeJS.ErrnoException
   error.code = code
   return error
-}
-
-// Maps async method names to their sync counterparts
-const promiseMethodMap: Record<keyof IFSPromises, keyof IFS> = {
-  lstat: 'lstatSync',
-  stat: 'statSync',
-  readdir: 'readdirSync',
-  readFile: 'readFileSync',
-  writeFile: 'writeFileSync',
-  mkdir: 'mkdirSync',
-  chmod: 'chmodSync',
-  rmdir: 'rmdirSync',
 }
 
 function promisify<T extends (...args: never[]) => unknown>(
@@ -305,14 +241,20 @@ function promisify<T extends (...args: never[]) => unknown>(
     })
 }
 
-// Maps callback method names to their sync counterparts (simple cases only)
-const callbackMethodMap: Record<string, keyof IFS> = {
-  lstat: 'lstatSync',
-  stat: 'statSync',
-  readdir: 'readdirSync',
-  writeFile: 'writeFileSync',
-  chmod: 'chmodSync',
-  fchmod: 'fchmodSync',
+// Maps async method names to their sync counterparts
+// minArgs: minimum args before callback (used to detect if optional arg is provided)
+// Methods with minArgs are included in IFSCallbacks, others are promise-only
+const asyncMethodMap: Record<string, { sync: keyof IFS; minArgs?: number }> = {
+  lstat: { sync: 'lstatSync', minArgs: 1 },
+  stat: { sync: 'statSync', minArgs: 1 },
+  readdir: { sync: 'readdirSync', minArgs: 1 },
+  readFile: { sync: 'readFileSync', minArgs: 1 },
+  writeFile: { sync: 'writeFileSync', minArgs: 2 },
+  mkdir: { sync: 'mkdirSync', minArgs: 1 },
+  chmod: { sync: 'chmodSync', minArgs: 2 },
+  fchmod: { sync: 'fchmodSync', minArgs: 2 },
+  open: { sync: 'openSync', minArgs: 2 },
+  rmdir: { sync: 'rmdirSync', minArgs: 1 },
 }
 
 export class MemoryFS implements IFS, IFSCallbacks {
@@ -336,8 +278,8 @@ export class MemoryFS implements IFS, IFSCallbacks {
   private createPromisesAPI(): IFSPromises {
     const api = {} as Record<string, unknown>
 
-    for (const [asyncName, syncName] of Object.entries(promiseMethodMap)) {
-      const syncMethod = this[syncName as keyof this]
+    for (const [asyncName, { sync }] of Object.entries(asyncMethodMap)) {
+      const syncMethod = this[sync as keyof this]
       if (typeof syncMethod === 'function') {
         api[asyncName] = promisify(syncMethod.bind(this))
       }
@@ -347,18 +289,30 @@ export class MemoryFS implements IFS, IFSCallbacks {
   }
 
   private createCallbackMethods(): void {
-    for (const [callbackName, syncName] of Object.entries(callbackMethodMap)) {
-      const syncMethod = this[syncName as keyof this]
+    for (const [callbackName, { sync, minArgs }] of Object.entries(
+      asyncMethodMap
+    )) {
+      if (minArgs === undefined) continue
+
+      const syncMethod = this[sync as keyof this]
       if (typeof syncMethod === 'function') {
         ;(this as unknown as Record<string, unknown>)[callbackName] = (
           ...args: unknown[]
         ) => {
-          const callback = args.pop() as (
+          // Find callback: it's the first function arg at or after minArgs position
+          let callbackIndex = args.findIndex(
+            (arg, i) => i >= minArgs && typeof arg === 'function'
+          )
+          if (callbackIndex === -1) callbackIndex = args.length - 1
+
+          const callback = args[callbackIndex] as (
             err: NodeJS.ErrnoException | null,
             result?: unknown
           ) => void
+          const syncArgs = args.slice(0, callbackIndex)
+
           try {
-            callback(null, (syncMethod as Function).apply(this, args))
+            callback(null, (syncMethod as Function).apply(this, syncArgs))
           } catch (e) {
             callback(e as NodeJS.ErrnoException)
           }
@@ -724,100 +678,17 @@ export class MemoryFS implements IFS, IFSCallbacks {
     parent.children.delete(name)
   }
 
-  // Callback-based async methods
-  // Simple ones are generated by createCallbackMethods (declared with ! for TypeScript)
+  // Callback-based async methods (all generated by createCallbackMethods)
   lstat!: IFSCallbacks['lstat']
   stat!: IFSCallbacks['stat']
   readdir!: IFSCallbacks['readdir']
   writeFile!: IFSCallbacks['writeFile']
   chmod!: IFSCallbacks['chmod']
   fchmod!: IFSCallbacks['fchmod']
-
-  // Complex overloaded ones (readFile, mkdir, open, rmdir) are defined manually below
-  readFile: IFSCallbacks['readFile'] = (
-    targetPath,
-    encodingOrCallback,
-    callback?: Callback<string>
-  ) => {
-    try {
-      if (typeof encodingOrCallback === 'function') {
-        encodingOrCallback(null, this.readFileSync(targetPath))
-      } else {
-        callback!(null, this.readFileSync(targetPath, encodingOrCallback))
-      }
-    } catch (e) {
-      if (typeof encodingOrCallback === 'function') {
-        encodingOrCallback(e as NodeJS.ErrnoException)
-      } else {
-        callback!(e as NodeJS.ErrnoException)
-      }
-    }
-  }
-
-  mkdir: IFSCallbacks['mkdir'] = (
-    targetPath,
-    optionsOrCallback,
-    callback?: VoidCallback
-  ) => {
-    try {
-      if (typeof optionsOrCallback === 'function') {
-        this.mkdirSync(targetPath)
-        optionsOrCallback(null)
-      } else {
-        this.mkdirSync(targetPath, optionsOrCallback)
-        callback!(null)
-      }
-    } catch (e) {
-      if (typeof optionsOrCallback === 'function') {
-        optionsOrCallback(e as NodeJS.ErrnoException)
-      } else {
-        callback!(e as NodeJS.ErrnoException)
-      }
-    }
-  }
-
-  open: IFSCallbacks['open'] = (
-    targetPath: string,
-    flags: string | number,
-    modeOrCallback: number | Callback<number>,
-    callback?: Callback<number>
-  ) => {
-    try {
-      if (typeof modeOrCallback === 'function') {
-        modeOrCallback(null, this.openSync(targetPath, flags))
-      } else {
-        callback!(null, this.openSync(targetPath, flags, modeOrCallback))
-      }
-    } catch (e) {
-      if (typeof modeOrCallback === 'function') {
-        modeOrCallback(e as NodeJS.ErrnoException)
-      } else {
-        callback!(e as NodeJS.ErrnoException)
-      }
-    }
-  }
-
-  rmdir: IFSCallbacks['rmdir'] = (
-    targetPath,
-    optionsOrCallback,
-    callback?: VoidCallback
-  ) => {
-    try {
-      if (typeof optionsOrCallback === 'function') {
-        this.rmdirSync(targetPath)
-        optionsOrCallback(null)
-      } else {
-        this.rmdirSync(targetPath, optionsOrCallback)
-        callback!(null)
-      }
-    } catch (e) {
-      if (typeof optionsOrCallback === 'function') {
-        optionsOrCallback(e as NodeJS.ErrnoException)
-      } else {
-        callback!(e as NodeJS.ErrnoException)
-      }
-    }
-  }
+  readFile!: IFSCallbacks['readFile']
+  mkdir!: IFSCallbacks['mkdir']
+  open!: IFSCallbacks['open']
+  rmdir!: IFSCallbacks['rmdir']
 }
 
 export function createMemoryFs(
