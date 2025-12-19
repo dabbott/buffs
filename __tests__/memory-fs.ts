@@ -64,6 +64,8 @@ describe('MemoryFS compatibility', () => {
       const miniStat = mini.statSync(filePath)
 
       expect(miniStat.mode).toEqual(memStat.mode)
+      expect(miniStat.uid).toEqual(memStat.uid)
+      expect(miniStat.gid).toEqual(memStat.gid)
       expect(miniStat.isDirectory()).toEqual(memStat.isDirectory())
     })
 

@@ -274,8 +274,14 @@ export class MemoryFS implements IFS, IFSCallbacks {
   public readonly promises: IFSPromises
 
   constructor() {
-    this.uid = typeof process.getuid === 'function' ? process.getuid() : 0
-    this.gid = typeof process.getgid === 'function' ? process.getgid() : 0
+    this.uid =
+      typeof process !== 'undefined' && typeof process.getuid === 'function'
+        ? (process.getuid?.() ?? 0)
+        : 0
+    this.gid =
+      typeof process !== 'undefined' && typeof process.getgid === 'function'
+        ? (process.getgid?.() ?? 0)
+        : 0
     this.root = this.createDirectoryNode(DEFAULT_DIR_MODE)
     this.promises = this.createPromisesAPI()
     this.createCallbackMethods()
