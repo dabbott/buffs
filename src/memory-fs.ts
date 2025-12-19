@@ -1,18 +1,20 @@
-import path from 'path'
 import type { IFS, IFSCallbacks, IFSPromises, StatsLike } from './ifs'
+import * as path from './path'
 
-const S_IFDIR = 0o040000
-const S_IFREG = 0o100000
-const DEFAULT_DIR_PERMISSIONS = 0o777
-const DEFAULT_FILE_PERMISSIONS = 0o666
-const DEFAULT_DIR_MODE = S_IFDIR | DEFAULT_DIR_PERMISSIONS
-const BLOCK_SIZE = 4096
-const O_RDONLY = 0
-const O_WRONLY = 1
-const O_RDWR = 2
-const O_CREAT = 0o100
-const O_TRUNC = 0o1000
-const O_APPEND = 0o2000
+export { path }
+
+export const S_IFDIR = 0o040000
+export const S_IFREG = 0o100000
+export const DEFAULT_DIR_PERMISSIONS = 0o777
+export const DEFAULT_FILE_PERMISSIONS = 0o666
+export const DEFAULT_DIR_MODE = S_IFDIR | DEFAULT_DIR_PERMISSIONS
+export const BLOCK_SIZE = 4096
+export const O_RDONLY = 0
+export const O_WRONLY = 1
+export const O_RDWR = 2
+export const O_CREAT = 0o100
+export const O_TRUNC = 0o1000
+export const O_APPEND = 0o2000
 
 export type DirectoryJSON = Record<string, string | null>
 export type DirectoryBufferJSON = Record<
@@ -65,7 +67,7 @@ function applyMode(type: NodeType, mode: number): number {
   return typeBits | (mode & 0o7777)
 }
 
-class MemoryStats implements StatsLike {
+export class MemoryStats implements StatsLike {
   private type: NodeType
   dev = 0
   ino = 0
